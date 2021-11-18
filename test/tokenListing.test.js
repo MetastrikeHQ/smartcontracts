@@ -78,17 +78,24 @@ describe("Token contract", function () {
     it("Add Liquidity and setup tried to buy from bigger than allownced", async function () {
       let tokenAmountToAddLP = BigNumber.from(4500000).mul(BigNumber.from(10).pow(18))
       let bnbAmountToAddLP = BigNumber.from(223).mul(BigNumber.from(10).pow(17))
+      await uniFactory.createPair(wETH.address, mtsToken.address)
+      let pairAddress = await uniFactory.getPair(wETH.address, mtsToken.address);
       await mtsToken.approve(uniRouter.address, tokenAmountToAddLP);
+      let currentlyTime = Math.floor(Date.now() / 1000)
+
+      await mtsToken.setupListing(pairAddress, ethers.utils.parseEther('2000'), 0, currentlyTime  + 36000);
+
       await uniRouter.addLiquidityETH(mtsToken.address, tokenAmountToAddLP, 0, 0, owner.address, 2629735000, { value:  bnbAmountToAddLP});
       let tokenAmountToBuy = tokenAmountToAddLP.div(BigNumber.from(50)) //(2%)
       //before setup then can not buy.
-      await expect(uniRouter.swapETHForExactTokens(tokenAmountToBuy, [wETH.address, mtsToken.address], owner.address, 2629735000)).to.be.reverted;
-      let pairAddress = await uniFactory.getPair(wETH.address, mtsToken.address);
-      expect(await mtsToken.setupListing(pairAddress, ethers.utils.parseEther('2000'), 1637160360))
       let bigAmount = ethers.utils.parseEther('2001')
       let goodAmount = ethers.utils.parseEther('2000')
+      await expect(uniRouter.swapETHForExactTokens(bigAmount, [wETH.address, mtsToken.address], owner.address, 2629735000,  { value:  ethers.utils.parseEther('2')})).to.be.reverted;
+      await mtsToken.setupListing(pairAddress, ethers.utils.parseEther('2000'), currentlyTime, currentlyTime  + 3600);
+      await network.provider.send("evm_increaseTime", [20])
+      await network.provider.send("evm_mine")
       await uniRouter.swapETHForExactTokens(goodAmount, [wETH.address, mtsToken.address], owner.address, 2629735000, { value:  ethers.utils.parseEther('2')})
-      await uniRouter.swapETHForExactTokens(bigAmount, [wETH.address, mtsToken.address], owner.address, 2629735000, { value:  ethers.utils.parseEther('2')})
+      await expect(uniRouter.swapETHForExactTokens(bigAmount, [wETH.address, mtsToken.address], owner.address, 2629735000,  { value:  ethers.utils.parseEther('2')})).to.be.reverted;
     });
   });
 });
