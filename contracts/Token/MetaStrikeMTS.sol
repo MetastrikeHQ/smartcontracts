@@ -60,7 +60,7 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, Ownable {
      */
 	function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
 		if (msg.sender == LPAddress && block.timestamp >= startTime && block.timestamp <= endTime) {
-			require(amount <= maxAmount, 'MetaStrike: maxAmount exceed listing!');
+			require(amount <= maxAmount, 'MTS: maxAmount exceed listing!');
 		}
 
 		_transfer(_msgSender(), recipient, amount);
