@@ -14,6 +14,7 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, Ownable {
 	address public LPAddress;
 	bool setup;
     mapping (address => bool) blacklisted;
+    mapping (address => uint256) lastBuy;
 
     constructor() ERC20("MetaStrike", "MTS") {
         _mint(msg.sender, 565000000 * 10 ** decimals());
@@ -61,6 +62,8 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, Ownable {
 	function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
 		if (msg.sender == LPAddress && block.timestamp >= startTime && block.timestamp <= endTime) {
 			require(amount <= maxAmount, 'MTS: maxAmount exceed listing!');
+            require(lastBuy[recipient] != block.number, "You already purchased in this block!");
+            lastBuy[recipient] = block.number;
 		}
 
 		_transfer(_msgSender(), recipient, amount);
