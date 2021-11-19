@@ -13,6 +13,7 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, Ownable {
 	uint256 public maxAmount;
 	address public LPAddress;
 	bool setup;
+    mapping (address => bool) blacklisted;
 
     constructor() ERC20("MetaStrike", "MTS") {
         _mint(msg.sender, 565000000 * 10 ** decimals());
@@ -37,8 +38,17 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, Ownable {
 		startTime = _startTime;
 		endTime = _endTime;
 		// setup = true;
-
 	}
+
+    function blackList(address _evil, bool _black) external onlyOwner {
+        blacklisted[_evil] = _black;
+    }
+
+    function batchBlackList(address[] memory _evil, bool[] memory _black) external onlyOwner {
+        for (uint256 i = 0; i < _evil.length; i++) {
+            blacklisted[_evil[i]] = _black[i];
+        }
+    }
 
 	
 	/**
@@ -62,6 +72,8 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, Ownable {
         whenNotPaused
         override
     {
+        require(!blacklisted[from], "MTS: This sender was blacklisted!");
+        require(!blacklisted[to], "MTS: This recipient was blacklisted!");
         super._beforeTokenTransfer(from, to, amount);
     }
 }

@@ -68,6 +68,16 @@ describe("Token contract", function () {
       expect(await mtsToken.totalSupply()).to.equal(ownerBalance);
     });
 
+    it("Test blacklist", async function () {
+      await mtsToken.blackList(user1.address, true);
+      await expect(mtsToken.transfer(user1.address, "10000")).to.be.revertedWith("MTS: This recipient was blacklisted!");
+
+      await mtsToken.transfer(user2.address, "100000000");
+      await mtsToken.connect(user2).transfer(owner.address, "10000");
+      await mtsToken.blackList(user2.address, true);
+      await expect(mtsToken.connect(user2).transfer(owner.address, "10000")).to.be.revertedWith("MTS: This sender was blacklisted!");
+    });
+
     it("Tried add LP", async function () {
       let tokenAmountToAddLP = BigNumber.from(4500000).mul(BigNumber.from(10).pow(18))
       let bnbAmountToAddLP = BigNumber.from(223).mul(BigNumber.from(10).pow(17))

@@ -126,8 +126,8 @@
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/contracts/Token/MetaStrike.sol": {
-      "lastModificationDate": 1637239132660,
-      "contentHash": "2de8df8a86822fa9e5518ecbc073bd95",
+      "lastModificationDate": 1637298149820,
+      "contentHash": "f565dec0dc70e018572e2d99852cd7da",
       "sourceName": "contracts/Token/MetaStrike.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -202,44 +202,6 @@
       ],
       "artifacts": [
         "ERC20"
-      ]
-    },
-    "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol": {
-      "lastModificationDate": 1637239231944,
-      "contentHash": "e888f903b629e3ced11f5d1f85cda823",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../ERC20.sol",
-        "../../../utils/Context.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "ERC20Burnable"
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts/security/Pausable.sol": {
@@ -421,6 +383,44 @@
       ],
       "artifacts": [
         "Context"
+      ]
+    },
+    "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol": {
+      "lastModificationDate": 1637239231944,
+      "contentHash": "e888f903b629e3ced11f5d1f85cda823",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../ERC20.sol",
+        "../../../utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ERC20Burnable"
       ]
     }
   }
