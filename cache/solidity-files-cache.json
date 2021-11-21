@@ -125,46 +125,6 @@
         "UniswapV2Router02"
       ]
     },
-    "/Users/totop/Documents/pavunato/smartcontracts/contracts/Token/MetaStrike.sol": {
-      "lastModificationDate": 1637298149820,
-      "contentHash": "f565dec0dc70e018572e2d99852cd7da",
-      "sourceName": "contracts/Token/MetaStrike.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
-        "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
-        "@openzeppelin/contracts/security/Pausable.sol",
-        "@openzeppelin/contracts/access/Ownable.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.2"
-      ],
-      "artifacts": [
-        "MetaStrike"
-      ]
-    },
     "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol": {
       "lastModificationDate": 1637239231938,
       "contentHash": "2cd550cedf51b8d294607dad5023d717",
@@ -421,6 +381,88 @@
       ],
       "artifacts": [
         "ERC20Burnable"
+      ]
+    },
+    "/Users/totop/Documents/pavunato/smartcontracts/contracts/Token/MetaStrikeMTS.sol": {
+      "lastModificationDate": 1637480135539,
+      "contentHash": "8e6476f5f244c76ce3717d7c721c225e",
+      "sourceName": "contracts/Token/MetaStrikeMTS.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        "@openzeppelin/contracts/security/Pausable.sol",
+        "@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.2"
+      ],
+      "artifacts": [
+        "MetaStrike",
+        "TwoPhaseOwnable"
+      ]
+    },
+    "/Users/totop/Documents/pavunato/smartcontracts/contracts/Token/MetaStrikeMTT.sol": {
+      "lastModificationDate": 1637480145204,
+      "contentHash": "e2184d1c7bd29689a98cc19d1a9e8b15",
+      "sourceName": "contracts/Token/MetaStrikeMTT.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/ERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol",
+        "@openzeppelin/contracts/security/Pausable.sol",
+        "@openzeppelin/contracts/utils/Context.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.2"
+      ],
+      "artifacts": [
+        "MetaStrikeMTT",
+        "TwoPhaseOwnable"
       ]
     }
   }

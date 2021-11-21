@@ -63,6 +63,15 @@ describe("Token contract", function () {
         console.log(pairAddress);
     });
 
+    it("Test 2 Phase Ownership", async function () {
+      expect(await mtsToken.owner()).to.be.equal(owner.address);
+      await mtsToken.transferOwnership(user1.address);
+      expect(await mtsToken.owner()).to.be.equal(owner.address);
+      await expect(mtsToken.connect(user1).pause()).to.be.reverted;
+      await mtsToken.connect(user1).acceptOwnership();
+      await mtsToken.connect(user1).pause();
+    });
+
     it("Should assign the total supply of tokens to the owner", async function () {
       const ownerBalance = await mtsToken.balanceOf(owner.address);
       expect(await mtsToken.totalSupply()).to.equal(ownerBalance);
