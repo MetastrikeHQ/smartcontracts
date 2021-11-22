@@ -4,101 +4,39 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
+contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-abstract contract TwoPhaseOwnable is Context {
-    address private _owner;
-    address private _pendingOwner;
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     */
-    constructor() {
-        _setOwner(_msgSender());
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view virtual returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function pendingOwner() public view virtual returns (address) {
-        return _pendingOwner;
-    }
-
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
-    modifier onlyOwner() {
-        require(owner() == _msgSender(), "Ownable: caller is not the owner");
-        _;
-    }
-
-    /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
-     */
-    function renounceOwnership() public virtual onlyOwner {
-        _setOwner(address(0));
-    }
-
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Can only be called by the current owner.
-     */
-    function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "TwoPhaseOwnable: new owner is the zero address");
-        _pendingOwner = newOwner;
-    }
-
-    function acceptOwnership() public virtual {
-        require(_msgSender() == pendingOwner(), "TwoPhaseOwnable: sender is not the next choosen one!");
-        _setOwner(_pendingOwner);
-    }
-
-    function _setOwner(address newOwner) private {
-        address oldOwner = _owner;
-        _owner = newOwner;
-        emit OwnershipTransferred(oldOwner, newOwner);
-    }
-}
-
-contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
 	uint256 public startTime;
 	uint256 public endTime;
 	uint256 public maxAmount;
 	address public LPAddress;
 	bool setup;
     mapping (address => bool) blacklisted;
+    
 
     constructor() ERC20("MetaStrike MTT", "MTT") {
         _mint(msg.sender, 565000000 * 10 ** decimals());
+
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(MINTER_ROLE, msg.sender);
     }
 
-    function pause() public onlyOwner {
+    function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() public onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
 
-    function mint(address to, uint256 amount) public onlyOwner {
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
 
-	function setupListing(address _LPAddress, uint256 _maxAmount, uint256 _startTime, uint256 _endTime) external onlyOwner {
+	function setupListing(address _LPAddress, uint256 _maxAmount, uint256 _startTime, uint256 _endTime) external onlyRole(DEFAULT_ADMIN_ROLE) {
 		// require(!setup, "Listing already setup");
 		LPAddress = _LPAddress;
 		maxAmount = _maxAmount;
@@ -107,11 +45,11 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
 		// setup = true;
 	}
 
-    function blackList(address _evil, bool _black) external onlyOwner {
+    function blackList(address _evil, bool _black) external onlyRole(DEFAULT_ADMIN_ROLE) {
         blacklisted[_evil] = _black;
     }
 
-    function batchBlackList(address[] memory _evil, bool[] memory _black) external onlyOwner {
+    function batchBlackList(address[] memory _evil, bool[] memory _black) external onlyRole(DEFAULT_ADMIN_ROLE) {
         for (uint256 i = 0; i < _evil.length; i++) {
             blacklisted[_evil[i]] = _black[i];
         }
