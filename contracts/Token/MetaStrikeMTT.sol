@@ -17,7 +17,7 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
     mapping (address => bool) blacklisted;
     
 
-    constructor() ERC20("MetaStrike MTT", "MTT") {
+    constructor() ERC20("Metastrike", "MTT") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
     }
