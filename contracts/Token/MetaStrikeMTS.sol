@@ -82,7 +82,7 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
     mapping (address => bool) blacklisted;
     mapping (address => uint256) lastBuy;
 
-    constructor() ERC20("MetaStrike", "MTS") {
+    constructor() ERC20("Metastrike", "MTS") {
         // _mint(msg.sender, 565000000 * 10 ** decimals());
     }
 
