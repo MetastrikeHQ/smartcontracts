@@ -1,6 +1,9 @@
 require("@nomiclabs/hardhat-waffle");
 require('dotenv').config()
 
+
+const mnemonic = process.env.MNEMONIC
+
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
@@ -24,10 +27,22 @@ module.exports = {
 		localhost: {
 			url: "http://127.0.0.1:8545"
 		},
+		testnet: {
+			url: "https://data-seed-prebsc-1-s3.binance.org:8545/",
+			chainId: 97,
+			gasPrice: 'auto',
+			accounts: {mnemonic: mnemonic}
+		},
+		mumbai: {
+			url: "https://matic-mumbai.chainstacklabs.com/",
+			chainId: 80001,
+			gasPrice: 'auto',
+			accounts: {mnemonic: mnemonic}
+		},
 		hardhat: {
-      gas: 9000000,
-      blockGasLimit: 0x1fffffffffffff,
-      allowUnlimitedContractSize: true
+			gas: 9000000,
+			blockGasLimit: 0x1fffffffffffff,
+			allowUnlimitedContractSize: true
 		},
 	},
 	solidity: {

@@ -18,8 +18,6 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
     
 
     constructor() ERC20("MetaStrike MTT", "MTT") {
-        _mint(msg.sender, 565000000 * 10 ** decimals());
-
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
     }
@@ -49,7 +47,7 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
         blacklisted[_evil] = _black;
     }
 
-    function batchBlackList(address[] memory _evil, bool[] memory _black) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function batchBlackList(address[] calldata _evil, bool[] calldata _black) external onlyRole(DEFAULT_ADMIN_ROLE) {
         for (uint256 i = 0; i < _evil.length; i++) {
             blacklisted[_evil[i]] = _black[i];
         }

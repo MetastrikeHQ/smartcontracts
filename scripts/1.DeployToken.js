@@ -13,7 +13,7 @@ async function main () {
 
 	const accounts = await hre.ethers.getSigners()
 	const MetaStrikeTokenContract = await hre.ethers.getContractFactory('MetaStrike')
-	const MetaStakingContract = await hre.ethers.getContractFactory('MetaStaking')
+	// const MetaStakingContract = await hre.ethers.getContractFactory('MetaStaking')
 
 	const options = {
 		gasLimit: 4000000
