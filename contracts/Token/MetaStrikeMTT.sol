@@ -13,13 +13,17 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
 	uint256 public endTime;
 	uint256 public maxAmount;
 	address public LPAddress;
-	bool setup;
     mapping (address => bool) blacklisted;
+    mapping (address => uint256) lastBuy;
     
 
     constructor() ERC20("MetaStrike MTT", "MTT") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
+    }
+
+    function checkBlacklisted(address _user) view external returns(bool) {
+        return blacklisted[_user];
     }
 
     function pause() public onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -35,12 +39,10 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
     }
 
 	function setupListing(address _LPAddress, uint256 _maxAmount, uint256 _startTime, uint256 _endTime) external onlyRole(DEFAULT_ADMIN_ROLE) {
-		// require(!setup, "Listing already setup");
 		LPAddress = _LPAddress;
 		maxAmount = _maxAmount;
 		startTime = _startTime;
 		endTime = _endTime;
-		// setup = true;
 	}
 
     function blackList(address _evil, bool _black) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -62,8 +64,13 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
      * - `recipient` cannot be the zero address.
      */
 	function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-		if (msg.sender == LPAddress && block.timestamp >= startTime && block.timestamp <= endTime) {
-			require(amount <= maxAmount, 'MTT: maxAmount exceed listing!');
+		if (msg.sender == LPAddress) {
+            require(block.timestamp >= startTime, "MTT: Not yet open for trading");
+            if (block.timestamp < endTime) {
+			    require(amount <= maxAmount, 'MTT: maxAmount exceed listing!');
+                require(lastBuy[recipient] != block.number, "MTT: You already purchased in this block!");
+                lastBuy[recipient] = block.number;
+            }
 		}
 
 		_transfer(_msgSender(), recipient, amount);

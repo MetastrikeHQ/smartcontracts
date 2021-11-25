@@ -78,6 +78,8 @@ describe("Token contract", function () {
     });
 
     it("Test blacklist", async function () {
+      await mtsToken.mint(user1.address, "1000000000000");
+      await mtsToken.mint(owner.address, "1000000000000");
       await mtsToken.blackList(user1.address, true);
       await expect(mtsToken.transfer(user1.address, "10000")).to.be.revertedWith("MTS: This recipient was blacklisted!");
 
@@ -90,6 +92,7 @@ describe("Token contract", function () {
     it("Tried add LP", async function () {
       let tokenAmountToAddLP = BigNumber.from(4500000).mul(BigNumber.from(10).pow(18))
       let bnbAmountToAddLP = BigNumber.from(223).mul(BigNumber.from(10).pow(17))
+      await mtsToken.mint(owner.address, tokenAmountToAddLP)
       await mtsToken.approve(uniRouter.address, tokenAmountToAddLP);
       await uniRouter.addLiquidityETH(mtsToken.address, tokenAmountToAddLP, 0, 0, owner.address, 2629735000, { value:  bnbAmountToAddLP});
     });
@@ -97,23 +100,30 @@ describe("Token contract", function () {
     it("Add Liquidity and setup tried to buy from bigger than allownced", async function () {
       let tokenAmountToAddLP = BigNumber.from(4500000).mul(BigNumber.from(10).pow(18))
       let bnbAmountToAddLP = BigNumber.from(223).mul(BigNumber.from(10).pow(17))
+      await mtsToken.mint(owner.address, tokenAmountToAddLP)
       await uniFactory.createPair(wETH.address, mtsToken.address)
       let pairAddress = await uniFactory.getPair(wETH.address, mtsToken.address);
       await mtsToken.approve(uniRouter.address, tokenAmountToAddLP);
       let currentlyTime = Math.floor(Date.now() / 1000)
 
-      await mtsToken.setupListing(pairAddress, ethers.utils.parseEther('2000'), 0, currentlyTime  + 36000);
+      await mtsToken.setupListing(pairAddress, ethers.utils.parseEther('2000'), currentlyTime + 100, currentlyTime  + 3600);
 
       await uniRouter.addLiquidityETH(mtsToken.address, tokenAmountToAddLP, 0, 0, owner.address, 2629735000, { value:  bnbAmountToAddLP});
       let tokenAmountToBuy = tokenAmountToAddLP.div(BigNumber.from(50)) //(2%)
       //before setup then can not buy.
       let bigAmount = ethers.utils.parseEther('2001')
       let goodAmount = ethers.utils.parseEther('2000')
+      console.log("1st Swap with Bigamount Failed");
       await expect(uniRouter.swapETHForExactTokens(bigAmount, [wETH.address, mtsToken.address], owner.address, 2629735000,  { value:  ethers.utils.parseEther('2')})).to.be.reverted;
-      await mtsToken.setupListing(pairAddress, ethers.utils.parseEther('2000'), currentlyTime, currentlyTime  + 3600);
-      await network.provider.send("evm_increaseTime", [20])
+      console.log("2nd Swap with goodAmount: also failed because not yet trading");
+      await expect(uniRouter.swapETHForExactTokens(goodAmount, [wETH.address, mtsToken.address], owner.address, 2629735000,  { value:  ethers.utils.parseEther('2')})).to.be.reverted;
+      // await mtsToken.connect(pairAddress).transfer(owner.adress, "1000000");
+      // await expect(uniRouter.swapETHForExactTokens(goodAmount, [wETH.address, mtsToken.address], owner.address, 2629735000,  { value:  ethers.utils.parseEther('2')})).to.be.reverted;
+      await network.provider.send("evm_increaseTime", [400])
       await network.provider.send("evm_mine")
+      console.log("3rd Swap with goodAmount: ok because trading and less than or equal to maxAmount");
       await uniRouter.swapETHForExactTokens(goodAmount, [wETH.address, mtsToken.address], owner.address, 2629735000, { value:  ethers.utils.parseEther('2')})
+      console.log("4th swap with bigAmount will be failed");
       await expect(uniRouter.swapETHForExactTokens(bigAmount, [wETH.address, mtsToken.address], owner.address, 2629735000,  { value:  ethers.utils.parseEther('2')})).to.be.reverted;
     });
   });

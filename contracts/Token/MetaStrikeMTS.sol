@@ -86,6 +86,10 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
         // _mint(msg.sender, 565000000 * 10 ** decimals());
     }
 
+    function checkBlacklisted(address _user) view external returns(bool) {
+        return blacklisted[_user];
+    }
+
     function pause() public onlyOwner {
         _pause();
     }
@@ -126,10 +130,13 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
      * - `recipient` cannot be the zero address.
      */
 	function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-		if (msg.sender == LPAddress && block.timestamp >= startTime && block.timestamp <= endTime) {
-			require(amount <= maxAmount, 'MTS: maxAmount exceed listing!');
-            require(lastBuy[recipient] != block.number, "MTS: You already purchased in this block!");
-            lastBuy[recipient] = block.number;
+		if (msg.sender == LPAddress) {
+            require(block.timestamp >= startTime, "MTS: Not yet open for trading");
+            if (block.timestamp < endTime) {
+			    require(amount <= maxAmount, 'MTS: maxAmount exceed listing!');
+                require(lastBuy[recipient] != block.number, "MTS: You already purchased in this block!");
+                lastBuy[recipient] = block.number;
+            }
 		}
 
 		_transfer(_msgSender(), recipient, amount);
