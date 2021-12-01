@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^4.3.3",
+    "@openzeppelin/contracts-upgradeable": "^4.4.0",
     "hardhat": "^2.6.8",
     "openzeppelin-contracts": "^4.0.0"
   }
