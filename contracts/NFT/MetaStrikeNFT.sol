@@ -16,12 +16,14 @@ contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpg
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     CountersUpgradeable.Counter private _tokenIdCounter;
+    uint256[6] _nullMetal; 
 
     struct WeaponInfo {
         uint256 weaponType;
         uint256 skin;
         uint8 tier; // 1 = uncom; 2 = silver; 3 = gold; 4 = diamond
         uint8 slot;
+        uint256 releaseTime;
     }
 
     mapping (uint256 => WeaponInfo) public weapon;
@@ -65,10 +67,10 @@ contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpg
         }
     }
 
-    function safeMint(address to, uint256 _weapon, uint256 _skin, uint8 _tier,  uint8 _slot) public onlyRole(MINTER_ROLE) {
+    function safeMint(address to, uint256 _weapon, uint256 _skin, uint8 _tier,  uint8 _slot, uint256 _timeLock) public onlyRole(MINTER_ROLE) {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
-        weapon[tokenId] = WeaponInfo(_weapon, _skin, _tier, _slot);
+        weapon[tokenId] = WeaponInfo(_weapon, _skin, _tier, _slot, _timeLock);
         _safeMint(to, tokenId);
     }
 
@@ -77,6 +79,7 @@ contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpg
         whenNotPaused
         override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
     {
+        require(weapon[tokenId].releaseTime < block.timestamp, 'MetaStrike: This token was not be released!');
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
