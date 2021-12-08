@@ -50,7 +50,7 @@ describe("Token contract", function () {
   // You can nest describe calls to create subsections.
   describe("Deployment", function () {
 
-    it("tge 15%, cliff 200, linear sec", async function () {
+    it("tge 15%, cliff 200s, linear 2000 sec", async function () {
         // function setupVestingStrategy(uint256 _id, uint256 _tgePercent, uint256 _cliffSecs, uint256 _linearSecs)
         await metaVesting.setupVestingStrategy(0, 150, 200, 2000);
         await metaVesting.setupVestingUser(0, 100000, [user1.address]);
@@ -59,16 +59,23 @@ describe("Token contract", function () {
         console.log(user1Info.amount.toString(), user1Info.claimed.toString(), user1Info.lastClaim.toString());
         let user1Claimable = await metaVesting.claimable(user1.address, 0);
         console.log('User 1 Claimable: ', user1Claimable.toString());
-        await network.provider.send("evm_increaseTime", [4000])
+        expect(user1Claimable).to.be.equal(15000);
+        await network.provider.send("evm_increaseTime", [400])
         await network.provider.send("evm_mine")
         user1Claimable = await metaVesting.claimable(user1.address, 0);
         console.log('User 1 Claimable: ', user1Claimable.toString());
+        expect(user1Claimable).to.be.gt(30000);
+        await metaVesting.connect(user1).claim(0);
+        await network.provider.send("evm_increaseTime", [2000])
+        await network.provider.send("evm_mine")
         await metaVesting.connect(user1).claim(0);
         let user1Bl = await mtsToken.balanceOf(user1.address);
         console.log("User 1 Balance: ", user1Bl.toString());
+        expect(user1Bl).to.be.equal(100000);
         user1Claimable = await metaVesting.claimable(user1.address, 0);
         console.log('User 1 Claimable: ', user1Claimable.toString());
-        await metaVesting.connect(user1).claim(0);
+        expect(user1Claimable).to.be.equal(0);
+        await expect(metaVesting.connect(user1).claim(0)).to.be.reverted;
     });
   });
 });
