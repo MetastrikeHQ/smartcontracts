@@ -2042,8 +2042,8 @@
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/contracts/Vesting/MetaVesting.sol": {
-      "lastModificationDate": 1638972979096,
-      "contentHash": "5557f2ed1cd0aa015a1fc52c8448d97d",
+      "lastModificationDate": 1638973234823,
+      "contentHash": "35e7454960e3103d5ea2aa20c4c0bcfd",
       "sourceName": "contracts/Vesting/MetaVesting.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -2071,8 +2071,7 @@
       "imports": [
         "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "hardhat/console.sol"
+        "@openzeppelin/contracts/access/Ownable.sol"
       ],
       "versionPragmas": [
         "^0.8.0"

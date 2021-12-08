@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
 
 contract MetaVesting is Ownable {
     using SafeERC20 for IERC20;
@@ -49,15 +48,11 @@ contract MetaVesting is Ownable {
     function claimable(address _user, uint256 _strategyId) public view returns (uint256) {
         VestingInfo memory userInfo = userToVesting[_user][_strategyId];
         VestingStrategy memory vestingInfo = vestingStrategy[_strategyId];
-        console.log(vestingInfo.tge, userInfo.amount);
+
         uint256 _claimTge = vestingInfo.tge * userInfo.amount / 1000;
         uint256 _amountAfterTge = userInfo.amount - _claimTge;
         uint256 _timeSpent;
         uint256 _claiming;
-        console.log(block.timestamp);
-        console.log(vestingInfo.cliff);
-        console.log(tgeTime);
-        console.log(_claimTge, _amountAfterTge, _timeSpent, _claiming);
         if (userInfo.claimed < _claimTge) {
             _claiming = _claimTge;
         }
@@ -68,7 +63,6 @@ contract MetaVesting is Ownable {
                 _timeSpent = block.timestamp - userInfo.lastClaim;
             }
         }
-        // console.log("TimeSpent: ", _timeSpent);
         _claiming += _timeSpent * _amountAfterTge / vestingInfo.linearDuration;
         if (_claiming > userInfo.amount - userInfo.claimed) {
             _claiming = userInfo.amount - userInfo.claimed;
