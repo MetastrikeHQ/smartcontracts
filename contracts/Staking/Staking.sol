@@ -10,7 +10,7 @@ interface IERC20Ext is IERC20 {
     function decimals() external view returns (uint256);
 }
 
-contract SmartChefInitializable is Ownable, ReentrancyGuard {
+contract MetaStaking is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20Ext;
 
     // Whether a limit is set for users
@@ -69,9 +69,8 @@ contract SmartChefInitializable is Ownable, ReentrancyGuard {
      * @param _rewardToken: reward token address
      * @param _rewardPerBlock: reward per block (in rewardToken)
      * @param _startBlock: start block
-     * @param _bonusEndBlock: end block
+     * @param _bonusEndBlock: end block (if any, else 0)
      * @param _poolLimitPerUser: pool limit per user in stakedToken (if any, else 0)
-     * @param _admin: admin address with ownership
      */
     constructor(
         IERC20Ext _stakedToken,
@@ -301,7 +300,7 @@ contract SmartChefInitializable is Ownable, ReentrancyGuard {
      * @param _to: block to finish
      */
     function _getMultiplier(uint256 _from, uint256 _to) internal view returns (uint256) {
-        if (_to <= bonusEndBlock) {
+        if (_to <= bonusEndBlock || bonusEndBlock == 0) {
             return (_to - _from);
         } else if (_from >= bonusEndBlock) {
             return 0;
