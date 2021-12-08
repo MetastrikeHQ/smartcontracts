@@ -384,8 +384,8 @@
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/contracts/Token/MetaStrikeMTS.sol": {
-      "lastModificationDate": 1637807425702,
-      "contentHash": "3477b4cf0e06e7b29eded7bb159152f0",
+      "lastModificationDate": 1638850952015,
+      "contentHash": "1729b20db094c1097d0825de4b5a1eaa",
       "sourceName": "contracts/Token/MetaStrikeMTS.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -420,6 +420,7 @@
         "^0.8.2"
       ],
       "artifacts": [
+        "IBPContract",
         "MetaStrike",
         "TwoPhaseOwnable"
       ]
@@ -647,8 +648,8 @@
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/contracts/Staking/Staking.sol": {
-      "lastModificationDate": 1637805751364,
-      "contentHash": "51dfab10cb2659e69a27bf7b136e2590",
+      "lastModificationDate": 1638789812044,
+      "contentHash": "8d615255903caabaa2c67be3e44bd73a",
       "sourceName": "contracts/Staking/Staking.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -684,7 +685,7 @@
       ],
       "artifacts": [
         "IERC20Ext",
-        "SmartChefInitializable"
+        "MetaStaking"
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol": {
@@ -828,82 +829,6 @@
       ],
       "artifacts": [
         "console"
-      ]
-    },
-    "/Users/totop/Documents/pavunato/smartcontracts/contracts/Marketplace/HasSignature.sol": {
-      "lastModificationDate": 1638264121827,
-      "contentHash": "94ff82e20506d9475d7eeb532718e3a4",
-      "sourceName": "contracts/Marketplace/HasSignature.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "HasSignature"
-      ]
-    },
-    "/Users/totop/Documents/pavunato/smartcontracts/contracts/Marketplace/Marketplace.sol": {
-      "lastModificationDate": 1638343852344,
-      "contentHash": "df3b8ed0e69aac190e57c65422c7d3e1",
-      "sourceName": "contracts/Marketplace/Marketplace.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC721/IERC721.sol",
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "./HasSignature.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "MetaMarketplace"
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
@@ -1172,8 +1097,8 @@
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/contracts/NFT/MetaStrikeNFT.sol": {
-      "lastModificationDate": 1638354951935,
-      "contentHash": "30e25159e68b5786e58f6af0916be373",
+      "lastModificationDate": 1638787015664,
+      "contentHash": "dc0e0e0acc5d5bde6f56f9b1c2f8f857",
       "sourceName": "contracts/NFT/MetaStrikeNFT.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -1199,18 +1124,19 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
-        "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol",
-        "@openzeppelin/contracts/security/Pausable.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol",
-        "@openzeppelin/contracts/utils/Counters.sol"
+        "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol",
+        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol"
       ],
       "versionPragmas": [
         "^0.8.2"
       ],
       "artifacts": [
-        "MetaStrikeNFT"
+        "MetaStrikeCore"
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts/utils/Counters.sol": {
@@ -1439,8 +1365,8 @@
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/contracts/NFT/MetaStrikeBox.sol": {
-      "lastModificationDate": 1638353290648,
-      "contentHash": "ccaec872ff0ef3f2ded19cf1085138d9",
+      "lastModificationDate": 1638364258734,
+      "contentHash": "fad3de6f899365efe44e9cc30172aaad",
       "sourceName": "contracts/NFT/MetaStrikeBox.sol",
       "solcConfig": {
         "version": "0.8.4",
@@ -1466,59 +1392,19 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
-        "@openzeppelin/contracts/access/AccessControl.sol",
+        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
+        "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol",
         "@openzeppelin/contracts/security/Pausable.sol",
-        "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol"
+        "@openzeppelin/contracts/access/AccessControl.sol",
+        "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol",
+        "@openzeppelin/contracts/utils/Counters.sol"
       ],
       "versionPragmas": [
         "^0.8.2"
       ],
       "artifacts": [
-        "IERC1155Mintable",
+        "IMetaStrikeCore",
         "MetaStrikeBox"
-      ]
-    },
-    "/Users/totop/Documents/pavunato/smartcontracts/contracts/NFT/metastrikeNFT2.sol": {
-      "lastModificationDate": 1638355147146,
-      "contentHash": "d09ae657ff8aa186fde7c4aa52c4693c",
-      "sourceName": "contracts/NFT/metastrikeNFT2.sol",
-      "solcConfig": {
-        "version": "0.8.4",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol",
-        "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol",
-        "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol",
-        "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol",
-        "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
-        "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.2"
-      ],
-      "artifacts": [
-        "MetaStrikeCore"
       ]
     },
     "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol": {
@@ -2113,6 +1999,124 @@
       ],
       "artifacts": [
         "IAccessControlUpgradeable"
+      ]
+    },
+    "/Users/totop/Documents/pavunato/smartcontracts/contracts/NFT/MetaStrikeBox1155.sol": {
+      "lastModificationDate": 1638787786732,
+      "contentHash": "427c459af682a6d4a7daebe5476d7059",
+      "sourceName": "contracts/NFT/MetaStrikeBox1155.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
+        "@openzeppelin/contracts/access/AccessControl.sol",
+        "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.2"
+      ],
+      "artifacts": [
+        "IMetaStrikeCore",
+        "MetaStrikeBox1155"
+      ]
+    },
+    "/Users/totop/Documents/pavunato/smartcontracts/contracts/Vesting/MetaVesting.sol": {
+      "lastModificationDate": 1638972979096,
+      "contentHash": "5557f2ed1cd0aa015a1fc52c8448d97d",
+      "sourceName": "contracts/Vesting/MetaVesting.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "hardhat/console.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "MetaVesting"
+      ]
+    },
+    "/Users/totop/Documents/pavunato/smartcontracts/node_modules/@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol": {
+      "lastModificationDate": 1638355135929,
+      "contentHash": "d20c5780eca268f05f6cf1b09182f9b1",
+      "sourceName": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/ContextUpgradeable.sol",
+        "../proxy/utils/Initializable.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "PausableUpgradeable"
       ]
     }
   }
