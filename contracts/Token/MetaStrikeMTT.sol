@@ -6,15 +6,17 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+interface IBPContract {
+    function protect(address sender, address receiver, uint256 amount) external;
+}
+
 contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-	uint256 public startTime;
-	uint256 public endTime;
-	uint256 public maxAmount;
-	address public LPAddress;
-    mapping (address => bool) blacklisted;
-    mapping (address => uint256) lastBuy;
+    IBPContract public bpContract;
+
+    bool public bpEnabled;
+    bool public bpDisabledForever;
     
 
     constructor() ERC20("Metastrike", "MTT") {
@@ -38,50 +40,56 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
         _mint(to, amount);
     }
 
-	function setupListing(address _LPAddress, uint256 _maxAmount, uint256 _startTime, uint256 _endTime) external onlyRole(DEFAULT_ADMIN_ROLE) {
-		LPAddress = _LPAddress;
-		maxAmount = _maxAmount;
-		startTime = _startTime;
-		endTime = _endTime;
-	}
-
     function blackList(address _evil, bool _black) external onlyRole(DEFAULT_ADMIN_ROLE) {
         blacklisted[_evil] = _black;
     }
 
-    function batchBlackList(address[] calldata _evil, bool[] calldata _black) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        for (uint256 i = 0; i < _evil.length; i++) {
-            blacklisted[_evil[i]] = _black[i];
+    function batchBlackList(address[] calldata _evils, bool[] calldata _blacks) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_blacks.length == 1) {
+            for (uint256 i = 0; i < _evils.length; i++) {
+                blacklisted[_evils[i]] = _blacks[0];
+            }
+        } else {
+            require(_evils.length == _blacks.length, "MTT: Input Format Mismatch!")
+            for (uint256 i = 0; i < _evils.length; i++) {
+                blacklisted[_evils[i]] = _blacks[i];
+            }
         }
     }
 
-	
-	/**
-     * @dev See {IERC20-transfer}.
-     *
-     * Requirements:
-     *
-     * - `recipient` cannot be the zero address.
-     */
-	function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-		if (msg.sender == LPAddress) {
-            require(block.timestamp >= startTime, "MTT: Not yet open for trading");
-            if (block.timestamp < endTime) {
-			    require(amount <= maxAmount, 'MTT: maxAmount exceed listing!');
-                require(lastBuy[recipient] != block.number, "MTT: You already purchased in this block!");
-                lastBuy[recipient] = block.number;
-            }
-		}
+    function setBPContract(address addr)
+        public
+        onlyOwner
+    {
+        require(addr != address(0), "BP adress cannot be 0x0");
 
-		_transfer(_msgSender(), recipient, amount);
-		return true;
-	}
+        bpContract = IBPContract(addr);
+    }
+
+    function setBPEnabled(bool enabled)
+        public
+        onlyOwner
+    {
+        bpEnabled = enabled;
+    }
+
+    function setBPDisableForever()
+        public
+        onlyOwner
+    {
+        require(!bpDisabledForever, "Bot protection disabled");
+
+        bpDisabledForever = true;
+    }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
         whenNotPaused
         override
     {
+        if (bpEnabled && !bpDisabledForever) {
+            bpContract.protect(from, to, amount);
+        }
         require(!blacklisted[from], "MTT: This sender was blacklisted!");
         require(!blacklisted[to], "MTT: This recipient was blacklisted!");
         super._beforeTokenTransfer(from, to, amount);

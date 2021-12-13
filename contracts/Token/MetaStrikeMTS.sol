@@ -74,16 +74,13 @@ abstract contract TwoPhaseOwnable is Context {
 }
 
 interface IBPContract {
-
     function protect(address sender, address receiver, uint256 amount) external;
-
 }
 
 contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
 
 	// bool setup;
     mapping (address => bool) blacklisted;
-    mapping (address => uint256) lastBuy;
 
     IBPContract public bpContract;
 
@@ -91,7 +88,6 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
     bool public bpDisabledForever;
 
     constructor() ERC20("Metastrike", "MTS") {
-        _mint(msg.sender, 565000000 * 10 ** decimals());
     }
 
     function checkBlacklisted(address _user) view external returns(bool) {
@@ -114,9 +110,16 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
         blacklisted[_evil] = _black;
     }
 
-    function batchBlackList(address[] memory _evil, bool[] memory _black) external onlyOwner {
-        for (uint256 i = 0; i < _evil.length; i++) {
-            blacklisted[_evil[i]] = _black[i];
+    function batchBlackList(address[] memory _evils, bool[] memory _blacks) external onlyOwner {
+        if (_blacks.length == 1) {
+            for (uint256 i = 0; i < _evils.length; i++) {
+                blacklisted[_evils[i]] = _blacks[0];
+            }
+        } else {
+            require(_evils.length == _blacks.length, "MTS: Input Format Mismatch!")
+            for (uint256 i = 0; i < _evils.length; i++) {
+                blacklisted[_evils[i]] = _blacks[i];
+            }
         }
     }
 
