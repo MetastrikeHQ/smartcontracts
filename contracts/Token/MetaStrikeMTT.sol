@@ -13,6 +13,8 @@ interface IBPContract {
 contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
+    mapping (address => bool) blacklisted;
+
     IBPContract public bpContract;
 
     bool public bpEnabled;
@@ -59,7 +61,7 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
 
     function setBPContract(address addr)
         public
-        onlyOwner
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(addr != address(0), "BP adress cannot be 0x0");
 
@@ -68,14 +70,14 @@ contract MetaStrikeMTT is ERC20, ERC20Burnable, Pausable, AccessControl {
 
     function setBPEnabled(bool enabled)
         public
-        onlyOwner
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         bpEnabled = enabled;
     }
 
     function setBPDisableForever()
         public
-        onlyOwner
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(!bpDisabledForever, "Bot protection disabled");
 
