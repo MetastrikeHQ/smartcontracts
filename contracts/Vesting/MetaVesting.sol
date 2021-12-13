@@ -57,7 +57,7 @@ contract MetaVesting is Ownable {
             _claiming = _claimTge;
         }
         if (tgeTime + vestingInfo.cliff < block.timestamp) {
-            if (tgeTime + vestingInfo.cliff < userInfo.lastClaim) {
+            if (tgeTime + vestingInfo.cliff > userInfo.lastClaim) {
                 _timeSpent = block.timestamp - (tgeTime + vestingInfo.cliff);
             } else {
                 _timeSpent = block.timestamp - userInfo.lastClaim;
@@ -84,7 +84,7 @@ contract MetaVesting is Ownable {
         }
 
         if (tgeTime + vestingInfo.cliff < block.timestamp) {
-            if (tgeTime + vestingInfo.cliff < userInfo.lastClaim) {
+            if (tgeTime + vestingInfo.cliff > userInfo.lastClaim) {
                 timeSpent = block.timestamp - (tgeTime + vestingInfo.cliff);
             } else {
                 timeSpent = block.timestamp - userInfo.lastClaim;
