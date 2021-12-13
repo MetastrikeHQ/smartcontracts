@@ -116,7 +116,7 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
                 blacklisted[_evils[i]] = _blacks[0];
             }
         } else {
-            require(_evils.length == _blacks.length, "MTS: Input Format Mismatch!")
+            require(_evils.length == _blacks.length, "MTS: Input Format Mismatch!");
             for (uint256 i = 0; i < _evils.length; i++) {
                 blacklisted[_evils[i]] = _blacks[i];
             }
