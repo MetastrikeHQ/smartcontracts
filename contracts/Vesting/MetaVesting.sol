@@ -32,6 +32,10 @@ contract MetaVesting is Ownable {
         tgeTime = _tgeTime;
     }
 
+    function setupTgeTime(uint256 _newTge) external onlyOwner {
+        tgeTime = _newTge;
+    }
+
     function setupVestingStrategy(uint256 _id, uint256 _tgePercent, uint256 _cliffSecs, uint256 _linearSecs) external onlyOwner {
         vestingStrategy[_id] = VestingStrategy(_tgePercent, _cliffSecs, _linearSecs);
     }
