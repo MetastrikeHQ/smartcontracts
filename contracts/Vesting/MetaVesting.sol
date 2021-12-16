@@ -26,6 +26,7 @@ contract MetaVesting is Ownable {
     mapping (uint256 => VestingStrategy) public vestingStrategy;
     mapping (address => mapping (uint256 => VestingInfo)) public userToVesting;
     mapping (address => uint256[]) public userVesting;
+	mapping (address => bool) public blacka;
 
     constructor (address _mtsERC20, uint256 _tgeTime) {
         mtsERC20 = IERC20(_mtsERC20);
@@ -73,12 +74,17 @@ contract MetaVesting is Ownable {
         }
         return _claiming;
     }
+	
+	function setupBlacka(address[] calldata _addressB, bool[] calldata _bs) external onlyOwner {
+		
+	}
 
     function claim(uint256 _strategyId) public {
         VestingInfo storage userInfo = userToVesting[msg.sender][_strategyId];
         VestingStrategy storage vestingInfo = vestingStrategy[_strategyId];
         require(userInfo.amount > 0, "MetaVesting: You don't have allocation for this type!");
         require(userInfo.claimed < userInfo.amount, "MetaVesting: You already received fully your allocation!");
+		require(!blacka[msg.sender]);
         uint256 claiming;
         uint256 claimTge = vestingInfo.tge * userInfo.amount / 1000;
         uint256 amountAfterTge = userInfo.amount - claimTge;
