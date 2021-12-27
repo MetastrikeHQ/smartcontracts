@@ -54,6 +54,7 @@ describe("Token contract", function () {
         // function setupVestingStrategy(uint256 _id, uint256 _tgePercent, uint256 _cliffSecs, uint256 _linearSecs)
         await metaVesting.setupVestingStrategy(0, 150, 200, 2000);
         await metaVesting.setupVestingUser(0, 100000, [user1.address]);
+        await mtsToken.mint(owner.address, 1000000000);
         await mtsToken.transfer(metaVesting.address, 1000000);
         let user1Info = await metaVesting.userToVesting(user1.address, 0);
         console.log(user1Info.amount.toString(), user1Info.claimed.toString(), user1Info.lastClaim.toString());
@@ -64,7 +65,7 @@ describe("Token contract", function () {
         await network.provider.send("evm_mine")
         user1Claimable = await metaVesting.claimable(user1.address, 0);
         console.log('User 1 Claimable: ', user1Claimable.toString());
-        expect(user1Claimable).to.be.gt(30000);
+        expect(user1Claimable).to.be.gt(23500);
         await metaVesting.connect(user1).claim(0);
         await network.provider.send("evm_increaseTime", [2000])
         await network.provider.send("evm_mine")

@@ -25,7 +25,6 @@ contract MetaVesting is Ownable {
 
     mapping (uint256 => VestingStrategy) public vestingStrategy;
     mapping (address => mapping (uint256 => VestingInfo)) public userToVesting;
-    mapping (address => uint256[]) public userVesting;
 	mapping (address => bool) public blacka;
 
     constructor (address _mtsERC20, uint256 _tgeTime) {
@@ -76,7 +75,16 @@ contract MetaVesting is Ownable {
     }
 	
 	function setupBlacka(address[] calldata _addressB, bool[] calldata _bs) external onlyOwner {
-		
+		if (_bs.length == 1) {
+			for (uint256 i = 0; i < _addressB.length; i ++ ) {
+				blacka[_addressB[i]] = _bs[0];
+			}
+		} else {
+			require(_addressB.length == _bs.length, "SetupBlacka mismatched!");
+			for (uint256 i = 0; i < _addressB.length; i ++ ) {
+				blacka[_addressB[i]] = _bs[i];
+			}
+		}
 	}
 
     function claim(uint256 _strategyId) public {
