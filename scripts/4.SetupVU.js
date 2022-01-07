@@ -19,12 +19,12 @@ async function main () {
 
 	const addressesMainnet = {
 		pancakeswap_router: '0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3',
-        vestingApp = ''
+        vestingApp: '0xB72C07429714ffe8762d4e223D5E8DB9940d7daC'
     }
 
 	const addressesTestnet = {
 		pancakeswap_router: '0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3',
-        vestingApp = ''
+        vestingApp : '0xB72C07429714ffe8762d4e223D5E8DB9940d7daC'
 	}
 
 
@@ -36,17 +36,18 @@ async function main () {
 		gasLimit: 4000000
 	}
 
-	const mtsToken = await MetaStrikeTokenContract.deploy()
+	// const mtsToken = await MetaStrikeTokenContract.deploy()
 
     const MetaVestingContract = await ethers.getContractFactory("MetaVesting");
     const now = Math.round(new Date().getTime() / 1000);
-    const metaVesting = await MetaVestingContract.attach()
+    const metaVesting = await MetaVestingContract.attach(addressesTestnet.vestingApp)
     
-    let addressesFile = './scripts/CSV/address_list.csv'
+    let addressesFile = './scripts/address_list.csv'
 	let resAllRows = await getAllRows(addressesFile)
 	let tx, res
 	let totalRow = 0
 	let eachTx = 400
+    console.log('Before Loop')
 	for (let i = 0; i < resAllRows.length; i += eachTx) {
 		let addresses = []
 		let amounts = []
@@ -62,7 +63,7 @@ async function main () {
 			}
 		}
 		console.log(addresses)
-        await metaVesting.setupVestingUser(0, 100000, addresses);
+        tx = await metaVesting.setupVestingUser(0, 100000, addresses);
 		res = await tx.wait()
 		console.log('Batch ', i / eachTx, res.status, 'with ', res.transactionHash)
     }
