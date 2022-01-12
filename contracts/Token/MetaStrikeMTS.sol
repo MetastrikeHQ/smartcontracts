@@ -73,17 +73,22 @@ abstract contract TwoPhaseOwnable is Context {
     }
 }
 
+interface IBPContract {
+    function protect(address sender, address receiver, uint256 amount) external;
+}
+
 contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
-	uint256 public startTime;
-	uint256 public endTime;
-	uint256 public maxAmount;
-	address public LPAddress;
+
 	// bool setup;
     mapping (address => bool) blacklisted;
-    mapping (address => uint256) lastBuy;
+
+    IBPContract public bpContract;
+
+    bool public bpEnabled;
+    bool public bpDisabledForever;
 
     constructor() ERC20("Metastrike", "MTS") {
-        // _mint(msg.sender, 565000000 * 10 ** decimals());
+        _mint(msg.sender, 565000000 * (10 ** uint256(decimals())));  
     }
 
     function checkBlacklisted(address _user) view external returns(bool) {
@@ -98,56 +103,56 @@ contract MetaStrike is ERC20, ERC20Burnable, Pausable, TwoPhaseOwnable {
         _unpause();
     }
 
-    function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
-    }
-
-	function setupListing(address _LPAddress, uint256 _maxAmount, uint256 _startTime, uint256 _endTime) external onlyOwner {
-		// require(!setup, "Listing already setup");
-		LPAddress = _LPAddress;
-		maxAmount = _maxAmount;
-		startTime = _startTime;
-		endTime = _endTime;
-		// setup = true;
-	}
-
     function blackList(address _evil, bool _black) external onlyOwner {
         blacklisted[_evil] = _black;
     }
 
-    function batchBlackList(address[] memory _evil, bool[] memory _black) external onlyOwner {
-        for (uint256 i = 0; i < _evil.length; i++) {
-            blacklisted[_evil[i]] = _black[i];
+    function batchBlackList(address[] memory _evils, bool[] memory _blacks) external onlyOwner {
+        if (_blacks.length == 1) {
+            for (uint256 i = 0; i < _evils.length; i++) {
+                blacklisted[_evils[i]] = _blacks[0];
+            }
+        } else {
+            require(_evils.length == _blacks.length, "MTS: Input Format Mismatch!");
+            for (uint256 i = 0; i < _evils.length; i++) {
+                blacklisted[_evils[i]] = _blacks[i];
+            }
         }
     }
 
-	
-	/**
-     * @dev See {IERC20-transfer}.
-     *
-     * Requirements:
-     *
-     * - `recipient` cannot be the zero address.
-     */
-	function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-		if (msg.sender == LPAddress) {
-            require(block.timestamp >= startTime, "MTS: Not yet open for trading");
-            if (block.timestamp < endTime) {
-			    require(amount <= maxAmount, 'MTS: maxAmount exceed listing!');
-                require(lastBuy[recipient] != block.number, "MTS: You already purchased in this block!");
-                lastBuy[recipient] = block.number;
-            }
-		}
+    function setBPContract(address addr)
+        public
+        onlyOwner
+    {
+        require(addr != address(0), "BP adress cannot be 0x0");
 
-		_transfer(_msgSender(), recipient, amount);
-		return true;
-	}
+        bpContract = IBPContract(addr);
+    }
+
+    function setBPEnabled(bool enabled)
+        public
+        onlyOwner
+    {
+        bpEnabled = enabled;
+    }
+
+    function setBPDisableForever()
+        public
+        onlyOwner
+    {
+        require(!bpDisabledForever, "Bot protection disabled");
+
+        bpDisabledForever = true;
+    }
 
     function _beforeTokenTransfer(address from, address to, uint256 amount)
         internal
         whenNotPaused
         override
     {
+        if (bpEnabled && !bpDisabledForever) {
+            bpContract.protect(from, to, amount);
+        }
         require(!blacklisted[from], "MTS: This sender was blacklisted!");
         require(!blacklisted[to], "MTS: This recipient was blacklisted!");
         super._beforeTokenTransfer(from, to, amount);
