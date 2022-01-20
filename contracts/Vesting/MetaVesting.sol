@@ -22,6 +22,7 @@ contract MetaVesting is Ownable {
     }
 
     uint256 public tgeTime;
+    bool public isPaused;
 
     mapping (uint256 => VestingStrategy) public vestingStrategy;
     mapping (address => mapping (uint256 => VestingInfo)) public userToVesting;
@@ -30,6 +31,7 @@ contract MetaVesting is Ownable {
     constructor (address _mtsERC20, uint256 _tgeTime) {
         mtsERC20 = IERC20(_mtsERC20);
         tgeTime = _tgeTime;
+        isPaused = false;
     }
 
     function setupTgeTime(uint256 _newTge) external onlyOwner {
@@ -40,11 +42,11 @@ contract MetaVesting is Ownable {
         vestingStrategy[_id] = VestingStrategy(_tgePercent, _cliffSecs, _linearSecs);
     }
 
-    function setupVestingUser(uint256 _strategyId, uint256 _amount, address[] calldata _users) external onlyOwner{
+    function setupVestingUser(uint256[] calldata _strategyId, uint256[] calldata _amount, address[] calldata _users) external onlyOwner{
         for(uint256 i =0; i < _users.length; i++ ) {
-            userToVesting[_users[i]][_strategyId].amount += _amount;
-            userToVesting[_users[i]][_strategyId].claimed = 0;
-            userToVesting[_users[i]][_strategyId].lastClaim = tgeTime;
+            userToVesting[_users[i]][_strategyId[i]].amount += _amount[i];
+            userToVesting[_users[i]][_strategyId[i]].claimed = 0;
+            userToVesting[_users[i]][_strategyId[i]].lastClaim = tgeTime;
 
         }
     }
@@ -88,11 +90,13 @@ contract MetaVesting is Ownable {
 	}
 
     function claim(uint256 _strategyId) public {
+        require(block.timestamp >= tgeTime, "TGE has not yet come.");
         VestingInfo storage userInfo = userToVesting[msg.sender][_strategyId];
         VestingStrategy storage vestingInfo = vestingStrategy[_strategyId];
         require(userInfo.amount > 0, "MetaVesting: You don't have allocation for this type!");
         require(userInfo.claimed < userInfo.amount, "MetaVesting: You already received fully your allocation!");
 		require(!blacka[msg.sender]);
+        require(!isPaused);
         uint256 claiming;
         uint256 claimTge = vestingInfo.tge * userInfo.amount / 1000;
         uint256 amountAfterTge = userInfo.amount - claimTge;
@@ -122,8 +126,8 @@ contract MetaVesting is Ownable {
         mtsERC20.safeTransfer(msg.sender, claiming);
     }
 
-    function withdraw(address _to) external onlyOwner {
-        mtsERC20.safeTransfer(_to, mtsERC20.balanceOf(address(this)));
+    function withdraw(address _to,uint256 _amt) external onlyOwner {
+        mtsERC20.safeTransfer(_to, _amt);
     }
 
 }
