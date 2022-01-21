@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 contract MetaVesting is Ownable {
     using SafeERC20 for IERC20;
@@ -22,6 +23,9 @@ contract MetaVesting is Ownable {
     }
 
     uint256 public tgeTime;
+    uint256 public tgeDuration;
+    uint256 public tgeInterval;
+    uint256 public tgeParts;
     bool public isPaused;
 
     mapping (uint256 => VestingStrategy) public vestingStrategy;
@@ -51,18 +55,36 @@ contract MetaVesting is Ownable {
             userToVesting[_users[i]][_strategyId[i]].amount += _amount[i];
             userToVesting[_users[i]][_strategyId[i]].claimed = 0;
             userToVesting[_users[i]][_strategyId[i]].lastClaim = tgeTime;
-
         }
+    }
+
+    function setupTgeStrategy(uint256 _tgeDuration, uint256 _tgeInterval) external onlyOwner {
+        tgeDuration = _tgeDuration;
+        tgeInterval = _tgeInterval;
+        tgeParts = tgeDuration / tgeInterval;
     }
 
     function claimable(address _user, uint256 _strategyId) public view returns (uint256) {
         VestingInfo memory userInfo = userToVesting[_user][_strategyId];
         VestingStrategy memory vestingInfo = vestingStrategy[_strategyId];
+        uint256 _claiming;
 
         uint256 _claimTge = vestingInfo.tge * userInfo.amount / 1000;
+        console.log("Block Timestamp", block.timestamp);
+        console.log("Lastclaim Timestamp", userInfo.lastClaim);
+        if (block.timestamp < tgeTime + tgeDuration) {
+            uint256 _claimingPart;
+            if (userInfo.lastClaim == 0) {
+                _claimingPart = (block.timestamp - tgeTime) / tgeInterval;
+            } else {
+                _claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
+            }
+            console.log("Claim Part", _claimingPart);
+            _claiming = _claimingPart * _claimTge / tgeParts;
+            return _claiming;
+        }
         uint256 _amountAfterTge = userInfo.amount - _claimTge;
         uint256 _timeSpent;
-        uint256 _claiming;
         if (userInfo.claimed < _claimTge) {
             _claiming = _claimTge;
         }
@@ -93,14 +115,35 @@ contract MetaVesting is Ownable {
 		}
 	}
 
+    function claimAtTge(uint256 _strategyId) public {
+        require(block.timestamp >= tgeTime, "TGE has not yet come!");
+		require(!blacka[msg.sender]);
+        require(!isPaused);
+        VestingInfo storage userInfo = userToVesting[msg.sender][_strategyId];
+        VestingStrategy storage vestingInfo = vestingStrategy[_strategyId];
+        uint256 claimTge = vestingInfo.tge * userInfo.amount / 1000;
+        require(userInfo.claimed < claimTge, "MetaVesting: You already received fully your TGE allocation!");
+        // uint256 claiming = (claimTge / tgeDuration) * tgeInterval;
+        uint256 claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
+        require(claimingPart > 0, "MetaVesting: Waiting for the next!");
+        uint256 claiming = claimingPart * claimTge / tgeParts;
+        userInfo.claimed += claiming;
+        userInfo.lastClaim = block.timestamp;
+        mtsERC20.safeTransfer(msg.sender, claiming);
+    }
+
     function claim(uint256 _strategyId) public {
-        require(block.timestamp >= tgeTime, "TGE has not yet come.");
+        require(block.timestamp >= tgeTime, "TGE has not yet come!");
         VestingInfo storage userInfo = userToVesting[msg.sender][_strategyId];
         VestingStrategy storage vestingInfo = vestingStrategy[_strategyId];
         require(userInfo.amount > 0, "MetaVesting: You don't have allocation for this type!");
         require(userInfo.claimed < userInfo.amount, "MetaVesting: You already received fully your allocation!");
 		require(!blacka[msg.sender]);
         require(!isPaused);
+        if (block.timestamp < tgeTime + tgeDuration) {
+            claimAtTge(_strategyId);
+            return;
+        }
         uint256 claiming;
         uint256 claimTge = vestingInfo.tge * userInfo.amount / 1000;
         uint256 amountAfterTge = userInfo.amount - claimTge;
