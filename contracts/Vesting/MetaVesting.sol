@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
 
 contract MetaVesting is Ownable {
     using SafeERC20 for IERC20;
@@ -54,7 +53,7 @@ contract MetaVesting is Ownable {
         for(uint256 i =0; i < _users.length; i++ ) {
             userToVesting[_users[i]][_strategyId[i]].amount += _amount[i];
             userToVesting[_users[i]][_strategyId[i]].claimed = 0;
-            userToVesting[_users[i]][_strategyId[i]].lastClaim = tgeTime;
+            userToVesting[_users[i]][_strategyId[i]].lastClaim = tgeTime - tgeInterval;
         }
     }
 
@@ -70,16 +69,9 @@ contract MetaVesting is Ownable {
         uint256 _claiming;
 
         uint256 _claimTge = vestingInfo.tge * userInfo.amount / 1000;
-        console.log("Block Timestamp", block.timestamp);
-        console.log("Lastclaim Timestamp", userInfo.lastClaim);
         if (block.timestamp < tgeTime + tgeDuration) {
             uint256 _claimingPart;
-            if (userInfo.lastClaim == 0) {
-                _claimingPart = (block.timestamp - tgeTime) / tgeInterval;
-            } else {
-                _claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
-            }
-            console.log("Claim Part", _claimingPart);
+            _claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
             _claiming = _claimingPart * _claimTge / tgeParts;
             return _claiming;
         }
@@ -115,14 +107,10 @@ contract MetaVesting is Ownable {
 		}
 	}
 
-    function claimAtTge(uint256 _strategyId) public {
-        require(block.timestamp >= tgeTime, "TGE has not yet come!");
-		require(!blacka[msg.sender]);
-        require(!isPaused);
+    function claimAtTge(uint256 _strategyId) internal {
         VestingInfo storage userInfo = userToVesting[msg.sender][_strategyId];
         VestingStrategy storage vestingInfo = vestingStrategy[_strategyId];
         uint256 claimTge = vestingInfo.tge * userInfo.amount / 1000;
-        require(userInfo.claimed < claimTge, "MetaVesting: You already received fully your TGE allocation!");
         // uint256 claiming = (claimTge / tgeDuration) * tgeInterval;
         uint256 claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
         require(claimingPart > 0, "MetaVesting: Waiting for the next!");
