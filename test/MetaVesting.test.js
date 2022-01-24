@@ -82,6 +82,13 @@ describe("Token contract", function () {
       await metaVesting.connect(user1).claim(0);
       user1Bl = await mtsToken.balanceOf(user1.address);
       console.log("User 1 Balance: ", user1Bl.toString());
+      user2Claimm = await metaVesting.claimable(user2.address, 1);
+      console.log('User 2 claimable: ', user2Claimm.toString());
+      let user2Bl = await mtsToken.balanceOf(user2.address);
+      console.log("User 2 Balance: ", user2Bl.toString());
+      await metaVesting.connect(user2).claim(1);
+      user2Bl = await mtsToken.balanceOf(user2.address);
+      console.log("User 2 Balance: ", user2Bl.toString());
 
     }),
 

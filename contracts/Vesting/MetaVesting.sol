@@ -69,10 +69,7 @@ contract MetaVesting is Ownable {
         uint256 _claiming;
 
         uint256 _claimTge = vestingInfo.tge * userInfo.amount / 1000;
-        if (block.timestamp < tgeTime + tgeDuration) {
-            if (vestingInfo.cliff == 0) {
-                return 0;
-            }
+        if (block.timestamp < tgeTime + tgeDuration && vestingInfo.cliff !=0) {
             uint256 _claimingPart;
             _claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
             _claiming = _claimingPart * _claimTge / tgeParts;
@@ -131,8 +128,7 @@ contract MetaVesting is Ownable {
         require(userInfo.claimed < userInfo.amount, "MetaVesting: You already received fully your allocation!");
 		require(!blacka[msg.sender]);
         require(!isPaused);
-        if (block.timestamp < tgeTime + tgeDuration) {
-            require(vestingInfo.cliff > 0, "MetaVesting: Waiting for end of TGE timeframe!");
+        if (block.timestamp < tgeTime + tgeDuration && vestingInfo.cliff != 0) {
             claimAtTge(_strategyId);
             return;
         }
