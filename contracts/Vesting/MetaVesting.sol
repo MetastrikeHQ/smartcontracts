@@ -111,12 +111,12 @@ contract MetaVesting is Ownable {
         VestingInfo storage userInfo = userToVesting[msg.sender][_strategyId];
         VestingStrategy storage vestingInfo = vestingStrategy[_strategyId];
         uint256 claimTge = vestingInfo.tge * userInfo.amount / 1000;
-        // uint256 claiming = (claimTge / tgeDuration) * tgeInterval;
         uint256 claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
         require(claimingPart > 0, "MetaVesting: Waiting for the next!");
         uint256 claiming = claimingPart * claimTge / tgeParts;
         userInfo.claimed += claiming;
-        userInfo.lastClaim = block.timestamp;
+        userInfo.lastClaim += claimingPart * tgeInterval;
+        // userInfo.lastClaim = block.timestamp;
         mtsERC20.safeTransfer(msg.sender, claiming);
     }
 
