@@ -67,7 +67,9 @@ contract MetaVesting is Ownable {
         VestingInfo memory userInfo = userToVesting[_user][_strategyId];
         VestingStrategy memory vestingInfo = vestingStrategy[_strategyId];
         uint256 _claiming;
-
+        if (block.timestamp < tgeTime) {
+            return 0;
+        }
         uint256 _claimTge = vestingInfo.tge * userInfo.amount / 1000;
         if (block.timestamp < tgeTime + tgeDuration && vestingInfo.cliff !=0) {
             uint256 _claimingPart;
