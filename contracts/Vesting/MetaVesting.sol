@@ -137,7 +137,7 @@ contract MetaVesting is Ownable {
         uint256 amountAfterTge = userInfo.amount - claimTge;
         uint256 timeSpent;
         if (userInfo.claimed < claimTge) {
-            claiming = claimTge;
+            claiming = claimTge - userInfo.claimed;
         }
 
         if (tgeTime + vestingInfo.cliff < block.timestamp) {
