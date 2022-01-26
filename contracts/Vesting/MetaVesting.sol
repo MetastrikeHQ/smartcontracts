@@ -72,6 +72,9 @@ contract MetaVesting is Ownable {
         if (block.timestamp < tgeTime + tgeDuration && vestingInfo.cliff !=0) {
             uint256 _claimingPart;
             _claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
+            if (_claimingPart > tgeParts) {
+                _claimingPart = tgeParts;
+            }
             _claiming = _claimingPart * _claimTge / tgeParts;
             return _claiming;
         }
@@ -113,6 +116,9 @@ contract MetaVesting is Ownable {
         uint256 claimTge = vestingInfo.tge * userInfo.amount / 1000;
         uint256 claimingPart = (block.timestamp - userInfo.lastClaim) / tgeInterval;
         require(claimingPart > 0, "MetaVesting: Waiting for the next!");
+        if (claimingPart > tgeParts) {
+            claimingPart = tgeParts;
+        }
         uint256 claiming = claimingPart * claimTge / tgeParts;
         userInfo.claimed += claiming;
         userInfo.lastClaim += claimingPart * tgeInterval;

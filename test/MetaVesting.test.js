@@ -51,12 +51,12 @@ describe("Token contract", function () {
   describe("Deployment", function () {
 
     it ("tge 15%, TGE 1hours and interval 1 mins", async function () {
-      await metaVesting.setupVestingStrategy(0, 150, 200, 2000);
+      await metaVesting.setupVestingStrategy(0, 150, 2000, 20000);
       // tge = 150000 
-      await metaVesting.setupTgeStrategy(3600, 60);
+      await metaVesting.setupTgeStrategy(600, 120);
       await metaVesting.setupVestingUser([0], [100000], [user1.address]);
 
-      await metaVesting.setupVestingStrategy(1, 0, 0, 2000);
+      await metaVesting.setupVestingStrategy(1, 0, 0, 20000);
       await metaVesting.setupVestingUser([1], [100000], [user2.address]);
       // 60 part
       // each part -> 250
@@ -67,7 +67,7 @@ describe("Token contract", function () {
       let user2Claimm = await metaVesting.claimable(user2.address, 1);
       console.log('User 2 claimable: ', user2Claimm.toString());
 
-      await network.provider.send("evm_increaseTime", [400])
+      await network.provider.send("evm_increaseTime", [592])
       await network.provider.send("evm_mine")
 
       user1Claimm = await metaVesting.claimable(user1.address, 0);
@@ -75,7 +75,7 @@ describe("Token contract", function () {
       await metaVesting.connect(user1).claim(0);
       let user1Bl = await mtsToken.balanceOf(user1.address);
       console.log("User 1 Balance: ", user1Bl.toString());
-      await network.provider.send("evm_increaseTime", [800])
+      await network.provider.send("evm_increaseTime", [3600])
       await network.provider.send("evm_mine")
       user1Claimm = await metaVesting.claimable(user1.address, 0);
       console.log('User 1 claimable: ', user1Claimm.toString());
