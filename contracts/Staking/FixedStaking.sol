@@ -12,7 +12,7 @@ contract MetaFixedStaking is Ownable {
     struct PoolInfo {
         uint256 hardCap;
         uint256 staking;
-        uint256 fixedRate;
+        uint256 fixedAPR;
         uint256 startDate;
         uint256 duration;
         uint256 maxStake;
@@ -22,6 +22,7 @@ contract MetaFixedStaking is Ownable {
     mapping(address => bool) public participant;
 
     uint256 constant internal PER_MILE = 1000;
+    uint256 constant internal ONE_YEAR = 365 days;
 
     event Staking(address user, uint256 pid, uint256 amount);
     event Unstaking(address user, uint256 poolId, uint256 staked, uint256 claiming, uint256 reward);
@@ -32,8 +33,9 @@ contract MetaFixedStaking is Ownable {
         mtsERC20 = IERC20(_mtsERC20);
     }
 
-    function addPool(uint256 _pid, uint256 _hardCap, uint256 _fixedRate, uint256 _startDate, uint256 _duration, uint256 _maxStake) external onlyOwner {
-        poolsInfo[_pid] = PoolInfo(_hardCap, 0, _fixedRate, _startDate, _duration, _maxStake);
+    function addPool(uint256 _pid, uint256 _hardCap, uint256 _fixedAPR, uint256 _startDate, uint256 _duration, uint256 _maxStake) external onlyOwner {
+        require(poolsInfo[_pid].staking == 0, "This pool was initialized!");
+        poolsInfo[_pid] = PoolInfo(_hardCap, 0, _fixedAPR, _startDate, _duration, _maxStake);
     }
 
     function stake(uint256 _pid, uint256 _amount) public {
@@ -55,7 +57,7 @@ contract MetaFixedStaking is Ownable {
         uint256 staked = staking[msg.sender][_pid];
         require(staking[msg.sender][_pid] > 0, "MetaFixedStaking: Are you sure you coming here before?");
         require (block.timestamp >= poolInfo.startDate + poolInfo.duration, "MetaFixedStaking: You can NOT unstake before duration end!");
-        reward = staked * poolInfo.fixedRate / PER_MILE;
+        reward = staked * poolInfo.fixedAPR * poolInfo.duration / (PER_MILE * ONE_YEAR);
         claiming = reward + staked;
         poolInfo.staking -= staking[msg.sender][_pid];
         staking[msg.sender][_pid] = 0;
