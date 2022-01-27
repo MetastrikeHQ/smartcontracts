@@ -19,7 +19,6 @@ contract MetaFixedStaking is Ownable {
     }
 
     mapping(uint256 => PoolInfo) public poolsInfo;
-    mapping(address => bool) public participant;
 
     uint256 constant internal PER_MILE = 1000;
     uint256 constant internal ONE_YEAR = 365 days;
@@ -28,6 +27,7 @@ contract MetaFixedStaking is Ownable {
     event Unstaking(address user, uint256 poolId, uint256 staked, uint256 claiming, uint256 reward);
 
     mapping (address => mapping (uint256 => uint256)) public staking;
+    mapping (address => mapping (uint256 => uint256)) public userStaked;
 
     constructor (address _mtsERC20) {
         mtsERC20 = IERC20(_mtsERC20);
@@ -41,12 +41,12 @@ contract MetaFixedStaking is Ownable {
     function stake(uint256 _pid, uint256 _amount) public {
         PoolInfo storage poolInfo = poolsInfo[_pid];
         require(poolInfo.staking + _amount <= poolInfo.hardCap, "MetaFixedStaking: The Pool was fulfilled!");
-        require(_amount <= poolInfo.maxStake, "MetaFixedStaking: The amount should be less than the maximum!");
+        require(_amount + staking[msg.sender][_pid] <= poolInfo.maxStake, "MetaFixedStaking: The amount should be less than the maximum!");
         require(block.timestamp < poolInfo.startDate, "MetaFixedStaking: This pool was locked, you can NOT deposit!");
         mtsERC20.safeTransferFrom(msg.sender, address(this), _amount);
         staking[msg.sender][_pid] += _amount;
         poolInfo.staking += _amount;
-        participant[msg.sender] = true;
+        userStaked[msg.sender][_pid] += _amount;
         emit Staking(msg.sender, _pid, _amount);
     }
 
