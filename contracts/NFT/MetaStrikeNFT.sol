@@ -3,17 +3,15 @@ pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
 /// @custom:security-contact security@metastrike.io
-contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, AccessControlUpgradeable, ERC721BurnableUpgradeable {
+contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, AccessControlUpgradeable, ERC721BurnableUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     CountersUpgradeable.Counter private _tokenIdCounter;
     uint256[6] _nullMetal; 
@@ -34,25 +32,15 @@ contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpg
     function initialize() initializer public {
         __ERC721_init("MetaStrikeCore", "MTS_NFT");
         __ERC721Enumerable_init();
-        __Pausable_init();
         __AccessControl_init();
         __ERC721Burnable_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
     }
 
     function _baseURI() internal pure override returns (string memory) {
         return "https://resource.metastrike.io/mts/{id}.json";
-    }
-
-    function pause() public onlyRole(PAUSER_ROLE) {
-        _pause();
-    }
-
-    function unpause() public onlyRole(PAUSER_ROLE) {
-        _unpause();
     }
 
     function getCurrentTokenId() external view returns (uint256 tokenId) {
@@ -76,7 +64,6 @@ contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpg
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)
         internal
-        whenNotPaused
         override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
     {
         require(weapon[tokenId].releaseTime < block.timestamp, 'MetaStrike: This token was not be released!');
