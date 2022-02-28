@@ -62,6 +62,8 @@ describe('MetaMarketplace contract', function () {
 			await metaMarket.connect(user2).buyAsset(0, 1);
 			expect (await metaNFT.ownerOf(0)).to.be.equal(user2.address);
 			expect (await metaNFT.balanceOf(user1.address)).to.be.equal(0);
+            expect (await mtsToken.balanceOf(user1.address)).to.be.equal(970000000);
+            expect (await mtsToken.balanceOf(metaMarket.address)).to.be.equal(30000000);
 		})
 
 		it('Test Cancel', async function () {

@@ -22,12 +22,12 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	mapping (address => NftInfo) public nfts;
 
 	struct Listing {
-        bool status;
+		bool status;
 		address seller;
 		address nftAddress;
 		uint256 nftId;
 		uint256 quantity;
-        uint256 availableQuantity;
+		uint256 availableQuantity;
 		address paymentToken;
 		uint256 unitPrice;
 		uint256 startedAt; // set to zero if no specific time
@@ -78,7 +78,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	 * @param _tokenAddress Payment token address
 	 */
 	function withdraw(address payable _to, address _tokenAddress) external onlyOwner {
-		require(marketTreasury[_tokenAddress] > 0, "not-enough-money");
+		require(marketTreasury[_tokenAddress] > 0, "MM: This treasury was not in pool!");
 		_transfer(_tokenAddress, _to, marketTreasury[_tokenAddress]);
 		marketTreasury[_tokenAddress] = 0;
 	}
@@ -157,18 +157,18 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 			"MM:Invalid date setting!"
 		);
 
-        _transferAsset(msg.sender, address(this), _nftAddress, _nftId, _nftAmount, "0x");
+		_transferAsset(msg.sender, address(this), _nftAddress, _nftId, _nftAmount, "0x");
 		uint256 _listingId = noListings;
 
 
 		listings.push(
 			Listing(
-                true,
+				true,
 				msg.sender,
 				_nftAddress,
 				_nftId,
 				_nftAmount,
-                _nftAmount,
+				_nftAmount,
 				_paymentToken,
 				_unitPrice,
 				_startedAt,
@@ -248,19 +248,19 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		emit ListingCanceled(msg.sender, _listingId);
 	}
 
-    function _transferAsset(
-        address from_,
-        address to_,
-        address nftAddress_,
-        uint256 nftId_,
-        uint256 amount_,
-        bytes memory data_
-    ) private {
-        if (nfts[nftAddress_].isERC1155) {
-            IERC1155(nftAddress_).safeTransferFrom(from_, to_, nftId_, amount_, data_);
-        } else {
-            require(amount_ == 1, "MM: ERC721 could NOT be fraud!");
-            IERC721(nftAddress_).safeTransferFrom(from_, to_, nftId_, data_);
-        }
-    }
+	function _transferAsset(
+		address from_,
+		address to_,
+		address nftAddress_,
+		uint256 nftId_,
+		uint256 amount_,
+		bytes memory data_
+	) private {
+		if (nfts[nftAddress_].isERC1155) {
+			IERC1155(nftAddress_).safeTransferFrom(from_, to_, nftId_, amount_, data_);
+		} else {
+			require(amount_ == 1, "MM: ERC721 could NOT be fraud!");
+			IERC721(nftAddress_).safeTransferFrom(from_, to_, nftId_, data_);
+		}
+	}
 }
