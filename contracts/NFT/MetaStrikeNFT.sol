@@ -14,7 +14,7 @@ contract MetaStrikeCore is Initializable, ERC721Upgradeable, ERC721EnumerableUpg
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     CountersUpgradeable.Counter private _tokenIdCounter;
-    uint256[6] _nullMetal; 
+    uint256[6] _nullMetal;
 
     struct WeaponInfo {
         uint256 weaponType;
