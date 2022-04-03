@@ -74,9 +74,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable {
         uint256 weaponSkin = _randomUint256(boxInfo.skins);
         uint8 weaponColor = uint8(_randomUint256(boxInfo.colors));
         uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots)];
-        if (slotsDraw != 0) {
-            IMetaStrikeCore(metastrikeCore).safeMint(msg.sender, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1);
-        }
+        IMetaStrikeCore(metastrikeCore).safeMint(msg.sender, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1);
     }
 
     // AUX
