@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 
 interface IMetaStrikeCore {
-    function safeMint(address to, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot) external;
+    function safeMint(address to, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _timeLock) external;
 }
 
 /// @custom:security-contact security@metastrike.io
@@ -17,7 +17,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     address public metastrikeCore;
-    string public constant name = "";
+    string public constant name = "Metastrike Box";
 
     struct BoxInfo {
         uint256 weapons;
@@ -33,9 +33,9 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable {
 
     constructor(address _metastrikeCore) ERC1155("https://resource.metastrike.io/box/{id}.json") {
         metastrikeCore = _metastrikeCore;
-        grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        grantRole(PAUSER_ROLE, msg.sender);
-        grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
@@ -74,7 +74,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable {
         uint256 weaponSkin = _randomUint256(boxInfo.skins);
         uint8 weaponColor = uint8(_randomUint256(boxInfo.colors));
         uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots)];
-        IMetaStrikeCore(metastrikeCore).safeMint(msg.sender, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1);
+        IMetaStrikeCore(metastrikeCore).safeMint(msg.sender, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, 600);
     }
 
     // AUX

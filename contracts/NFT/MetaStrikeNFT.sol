@@ -29,8 +29,8 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     /// @custom:oz-upgrades-unsafe-allow constructor
 
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
-        grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -52,8 +52,8 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     function safeMint(address to, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _timeLock) 
     public onlyRole(MINTER_ROLE) {
         uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
         weapon[tokenId] = WeaponInfo(_weapon, _skin, _color, _tier, _slot, _timeLock);
+        _tokenIdCounter.increment();
         _safeMint(to, tokenId);
     }
 
