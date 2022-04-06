@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -16,6 +19,8 @@ interface IMetaStrikeCore {
 /// @custom:security-contact security@metastrike.io
 contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRFConsumerBaseV2 {
 
+    using SafeERC20 for IERC20;
+
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
@@ -30,8 +35,17 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint8[] slots;
         uint256[] weightedSlots;
     }
+    
+    struct SellInfo {
+        uint8 boxId;
+        address paymentToken;
+        uint256 price;
+        uint256 totalAmount;
+        uint256 purchased;
+    }
 
-    mapping (uint256 => BoxInfo) public boxesInfo;
+    mapping (uint8 => BoxInfo) public boxesInfo;
+    mapping (uint8 => SellInfo) public sellInfo;
     mapping (uint8 => uint256) public boxTypeToTimeLock;
 
     VRFCoordinatorV2Interface COORDINATOR;
@@ -54,10 +68,12 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     }
 
     mapping(uint256 => RequestInfo) public RequestInfos;
-    
+
     mapping(uint256 => address) public s_requestIdToBoxOwer;
     mapping(uint256 => uint256) public s_requestIdToBoxId; 
     mapping(uint256 => uint256[]) public s_requestIdToRandom;
+
+    event BoxBought(address buyer, uint8 sellId, uint8 boxId, uint256 amount);
 
     constructor(address _metastrikeCore,uint64 subscriptionId) ERC1155("https://resource.metastrike.io/box/{id}.json") VRFConsumerBaseV2(vrfCoordinator) {
         metastrikeCore = _metastrikeCore;
@@ -81,6 +97,32 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     function setupBox(uint8 _boxId, uint256 _weapons, uint8 _tier, uint256 _skin, uint8 _color, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(boxesInfo[_boxId].weapons == 0, "Box already set up!");
         boxesInfo[_boxId] = BoxInfo(_weapons, _tier, _skin, _color, _slots, _weightedSlots);
+    }
+
+    function setupSell(uint8 _sellId, uint8 _boxId, address _paymentToken, uint256 _price, uint256 _totalAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 purchased;
+        if (sellInfo[_sellId].purchased != 0) {
+            purchased = sellInfo[_sellId].purchased;
+        }
+        sellInfo[_sellId] = SellInfo(_boxId, _paymentToken, _price, _totalAmount, purchased);
+    }
+
+    function buyBox(uint8 _sellId, uint256 _amount, bytes memory data) public {
+        SellInfo storage deal = sellInfo(_sellId);
+        require(deal.purchased + _amount <= deal.totalAmount, "Box was out of stock");
+        IERC20(deal.paymentToken).safeTransferFrom(msg.sender, address.this, deal.price * _amount);
+        deal.purchased += _amount;
+        _mint(msg.sender, deal.boxId, _amount, data);
+        emit BoxBought(msg.sender, _sellId, deal.boxId, _amount);
+    }
+
+    function claimFund(address token, address payable to) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (_token == address(0)) {
+			(bool success,) = _to.call{value : address(this).balance}("");
+			require(success, "Tranfer Native Failed!");
+        } else {
+            IERC20(_token).safeTransfer(_to, IERC20(_token).balanceOf(address(this)));
+        }
     }
     
     function mint(address account, uint256 id, uint256 amount, bytes memory data)
