@@ -116,12 +116,12 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         emit BoxBought(msg.sender, _sellId, deal.boxId, _amount);
     }
 
-    function claimFund(address token, address payable to) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function claimFund(address _token, address _to, uint256 _amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
         if (_token == address(0)) {
-			(bool success,) = _to.call{value : address(this).balance}("");
+			(bool success,) = _to.call{value : _amount}("");
 			require(success, "Tranfer Native Failed!");
         } else {
-            IERC20(_token).safeTransfer(_to, IERC20(_token).balanceOf(address(this)));
+            IERC20(_token).safeTransfer(_to, _amount);
         }
     }
     
