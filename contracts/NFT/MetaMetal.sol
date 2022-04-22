@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
 /// @custom:security-contact security@metastrike.io
-contract MyToken is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
+contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
     using SafeERC20 for IERC20;
     
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
@@ -23,6 +23,15 @@ contract MyToken is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         uint256 acquired;
     }
 
+    struct MetalInfo {
+        uint256 kind;
+        uint256 level;
+        uint256 point;
+        uint256 percentage;
+    }
+
+    mapping (uint256 => MetalInfo) public metals;
+
     mapping (uint256 => AcquireInfo) public acquireInfo;
 
     event Acquired(address acquirer, uint256 acquireId, uint256 metalId, uint256 amount);
@@ -33,8 +42,17 @@ contract MyToken is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         _grantRole(MINTER_ROLE, msg.sender);
     }
 
+    function getMetalInfo(uint256 id) public view returns (uint256, uint256, uint256, uint256) {
+        return (metals[id].kind, metals[id].level, metals[id].point, metals[id].percentage);
+    }
+
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
         _setURI(newuri);
+    }
+
+    function setupMetal(uint256 metalId, uint256 _kind, uint256 _level, uint256 _point, uint256 _percentage) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_point > 0, "Metal could be zero point!");
+        metals[metalId] = MetalInfo (_kind, _level, _point, _percentage);
     }
 
     function setupAccquire(uint256 _acquireId, bool _status, uint256 _metalId, address _paymentToken, uint256 _price) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -67,6 +85,7 @@ contract MyToken is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         public
         onlyRole(MINTER_ROLE)
     {
+        require(metals[id].point > 0, "This metal was not available!");
         _mint(account, id, amount, data);
     }
 
