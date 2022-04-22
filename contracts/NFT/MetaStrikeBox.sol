@@ -44,7 +44,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint256 purchased;
     }
 
-    mapping (uint8 => BoxInfo) public boxesInfo;
+    mapping (uint256 => BoxInfo) public boxesInfo;
     mapping (uint8 => SellInfo) public sellInfo;
     mapping (uint8 => uint256) public boxTypeToTimeLock;
 
@@ -108,9 +108,9 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     }
 
     function buyBox(uint8 _sellId, uint256 _amount, bytes memory data) public {
-        SellInfo storage deal = sellInfo(_sellId);
+        SellInfo storage deal = sellInfo[_sellId];
         require(deal.purchased + _amount <= deal.totalAmount, "Box was out of stock");
-        IERC20(deal.paymentToken).safeTransferFrom(msg.sender, address.this, deal.price * _amount);
+        IERC20(deal.paymentToken).safeTransferFrom(msg.sender, address(this), deal.price * _amount);
         deal.purchased += _amount;
         _mint(msg.sender, deal.boxId, _amount, data);
         emit BoxBought(msg.sender, _sellId, deal.boxId, _amount);
