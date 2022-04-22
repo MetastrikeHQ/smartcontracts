@@ -2,31 +2,44 @@
 pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+interface IMetal is IERC1155 {
+    function getMetalInfo(uint256 metalId) external view returns (uint256, uint256, uint256, uint256);
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) external;
+    function burn(address account, uint256 id, uint256 value) external;
+}
+
 /// @custom:security-contact security@metastrike.io
 contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     using Counters for Counters.Counter;
+
+    address metalAddress;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
     uint256[6] _nullMetal;
 
     struct WeaponInfo {
+        bool weaponCat;
         uint256 weaponType;
         uint256 skin;
         uint256 color;
         uint8 tier; // 1 = uncom; 2 = silver; 3 = gold; 4 = diamond
         uint8 slot;
+        uint256 point;
         uint256 releaseTime;
     }
 
-    mapping (uint256 => WeaponInfo) public weapon;
+    mapping (uint256 => WeaponInfo) public weapons;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
+
+    event MetaStrikeMinted(address to, bool _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock);
 
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -49,11 +62,12 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         }
     }
 
-    function safeMint(address to, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _timeLock) 
+    function safeMint(address to, bool _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
     public onlyRole(MINTER_ROLE) {
         uint256 tokenId = _tokenIdCounter.current();
-        weapon[tokenId] = WeaponInfo(_weapon, _skin, _color, _tier, _slot, _timeLock);
+        weapons[tokenId] = WeaponInfo(_weaponCat, _weapon, _skin, _color, _tier, _slot, _points, _timeLock);
         _tokenIdCounter.increment();
+        emit MetaStrikeMinted(to, _weaponCat, _weapon, _skin, _color, _tier, _slot, _points, _timeLock);
         _safeMint(to, tokenId);
     }
 
@@ -61,7 +75,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         internal
         override(ERC721, ERC721Enumerable)
     {
-        require(weapon[tokenId].releaseTime < block.timestamp, 'MetaStrike: This token was not be released!');
+        require(weapons[tokenId].releaseTime < block.timestamp, 'MetaStrike: This token was not be released!');
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
@@ -74,5 +88,26 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+    
+    // Advance MetaStrike NFT
+    function attachMetal(uint256[] memory metalIds, uint256 tokenId) external {
+        require(metalIds.length <= weapons[tokenId].slot, "Can not add more than the slot you are having!");
+        require(ownerOf(tokenId) == msg.sender, "You are not the owner of nftId");
+        uint256 ONE_HUNRED = 10000;
+        for (uint256 i = 0; i < metalIds.length; i ++ ) {
+            IMetal(metalAddress).burn(msg.sender, metalIds[i], 1);
+            uint256 ranNumber = _randomUint256(ONE_HUNRED);
+            (,,uint256 point, uint256 percent) = IMetal(metalAddress).getMetalInfo(metalIds[i]);
+            if (ranNumber <= percent) {
+                weapons[tokenId].slot -= 1;
+                weapons[tokenId].point += point;
+            }
+        }
+    }
+
+    function _randomUint256(uint256 ranged) internal view returns (uint256 rnd) {
+        rnd = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp, gasleft(), msg.sender)));
+        rnd = rnd % ranged;
     }
 }
