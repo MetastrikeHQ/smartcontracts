@@ -34,7 +34,16 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		uint256 expiredAt; // set to zero if no specific time
 	}
 
+	struct Offer {
+		bool status;
+		address creator;
+		uint256 listingId;
+		uint256 amount;
+		uint256 unitPrice;
+	}
+
 	Listing[] public listings;
+	Offer[] public offers;
 
 
 	mapping(address => bool) public isPaymentAccepted;
@@ -42,7 +51,6 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	// token address => amount , address(0) for nativeChainCoin
 	mapping(address => uint256) public marketTreasury;
 
-	uint256 public noListings;
 	uint256 private constant ONE_HUNDER_PERCENT = 10 ** 5; // with 3 decimals
 	uint256 private constant TEN_PERCENT = 10 ** 4; // with 3 decimals
 	uint256 public marketFee;
@@ -60,7 +68,12 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		uint256 expiredAt
 	);
 	event AssetBought(address indexed buyer, uint256 indexed listingId, uint256 itemAmount);
-	event ListingCanceled(address indexed seller, uint256 listingId);
+	event ListingCanceled(uint256 indexed listingId);
+
+	event OfferCreated(uint256 indexed offerId, address indexed offerCreator, uint256 indexed listingId, uint256 proposedAmount, uint256 proposedPrice);
+	event OfferAccepted(uint256 indexed offerId);
+	event OfferCanceled(uint256 indexed offerId);
+	
 	event MarketFeeUpdated(uint256 newMarketFee);
 
 
@@ -70,6 +83,10 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		setPaymentToken(_paymentToken, true);
 		// Fee init
 		updateMarketFee(_marketFee);
+	}
+
+	function getNoListings() external view returns (uint256) {
+		return listings.length;
 	}
 
 	/**
@@ -158,7 +175,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		);
 
 		_transferAsset(msg.sender, address(this), _nftAddress, _nftId, _nftAmount, "0x");
-		uint256 _listingId = noListings;
+		uint256 _listingId = listings.length;
 
 
 		listings.push(
@@ -175,7 +192,6 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 				_expiredAt
 			)
 		);
-		noListings++;
 		emit ListingCreated(msg.sender, _listingId, _nftAddress, _nftId, _nftAmount, _paymentToken, _unitPrice, _startedAt, _expiredAt);
 	}
 
@@ -245,7 +261,77 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		listing.status = false;
 
 		_transferAsset(address(this), msg.sender, listing.nftAddress, listing.nftId, listing.availableQuantity, "0x");
-		emit ListingCanceled(msg.sender, _listingId);
+		emit ListingCanceled(_listingId);
+	}
+
+	function creatOffer(uint256 _listingId, uint256 _proposedAmount, uint256 _proposedPrice) payable external {
+		// Offer memory offer = offers[];
+		Listing storage listing = listings[_listingId];
+
+		require(listing.availableQuantity > _proposedAmount, "MM: Out of stock!");
+
+		require(
+			listing.expiredAt == 0 ||
+			(block.timestamp >= listing.startedAt &&
+			block.timestamp <= listing.expiredAt),
+			"MM: Listing was not available!"
+		);
+		require(listing.status, "MM: Listing was canceled!");
+		uint256 _offerId = offers.length;
+		uint256 totalAmount = _proposedPrice * _proposedAmount;
+		if (listing.paymentToken == address(0)) {
+			require(totalAmount == msg.value, "Not enough to pay!");
+		} else {
+			IERC20(listing.paymentToken).safeTransferFrom(msg.sender, address(this), totalAmount);
+		}
+
+		offers.push(
+			Offer(
+				true,
+				msg.sender,
+				_listingId,
+				_proposedAmount,
+				_proposedPrice
+			)
+		);
+		emit OfferCreated(_offerId, msg.sender, _listingId, _proposedAmount, _proposedPrice);
+	}
+
+	function acceptOffer(uint256 _offerId) external {
+		Offer storage offer = offers[_offerId];
+		Listing storage listing = listings[offer.listingId];
+		require(offer.status, "MM: Offer was canceled!");
+		require(offer.amount > 0, "MM: Offer was accepted");
+
+		require(listing.availableQuantity >= offer.amount, "MM: Out of stock!");
+		require(
+			listing.expiredAt == 0 ||
+			(block.timestamp >= listing.startedAt &&
+			block.timestamp <= listing.expiredAt),
+			"MM: Listing was not available!"
+		);
+		require(listing.status, "MM: Listing was canceled!");
+
+		uint256 totalPrice =  offer.unitPrice * offer.amount;
+		uint256 marketCut = marketFee * totalPrice / ONE_HUNDER_PERCENT;
+		listing.availableQuantity -= offer.amount;
+		offer.amount = 0;
+		// Transfer NFT assets
+		_transferAsset(address(this), offer.creator, listing.nftAddress, listing.nftId, offer.amount, "0x");
+		uint256 netPrice = totalPrice - marketCut;
+		_transfer(listing.paymentToken, payable(listing.seller), netPrice);
+		emit OfferAccepted(_offerId);
+	}
+
+	function cancelOffer(uint256 _offerId) external {
+		Offer storage offer = offers[_offerId];
+		Listing storage listing = listings[offer.listingId];
+		require(offer.status, "MM: Offer was already canceled!");
+		require(offer.amount > 0, "MM: Offer was accepted");
+		uint256 refundAmount = offer.amount * offer.unitPrice;
+		offer.status =false;
+		_transfer(listing.paymentToken, payable(msg.sender), refundAmount);
+		emit OfferCanceled(_offerId);
 	}
 
 	function _transferAsset(
