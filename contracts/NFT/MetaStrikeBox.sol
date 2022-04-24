@@ -13,7 +13,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
 interface IMetaStrikeCore {
-    function safeMint(address to, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _timeLock) external;
+    function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _timeLock) external;
 }
 
 /// @custom:security-contact security@metastrike.io
@@ -96,9 +96,9 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         _unpause();
     }
 
-    function setupBox(uint8 _boxId, uint8 _weaponCat, uint256 _weapons, uint256 _skin, uint8 _color, uint8 _tier, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setupBox(uint8 _boxId, uint8 _weaponCat, uint256 _weapons, uint256 _skins, uint8 _colors, uint8 _tier, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(boxesInfo[_boxId].weapons == 0, "Box already set up!");
-        boxesInfo[_boxId] = BoxInfo(_weapon, _skin, _colors, _tier, _slots, _weightedSlots);
+        boxesInfo[_boxId] = BoxInfo(_weaponCat, _weapons, _skins, _colors, _tier, _slots, _weightedSlots);
     }
 
     function setupSell(uint8 _sellId, uint8 _boxId, address _paymentToken, uint256 _price, uint256 _totalAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -161,7 +161,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint256 ran = randomWords[0];
         burn(boxOwner, boxId, 1);
         BoxInfo memory boxInfo = boxesInfo[boxId];
-        uint256 weaponCat =  boxInfo.weaponCat;
+        uint8 weaponCat =  boxInfo.weaponCat;
         uint256 weaponType = ran % boxInfo.weapons;
         uint256 weaponSkin = ran % boxInfo.skins;
         uint8 weaponColor = uint8(ran % boxInfo.colors);
