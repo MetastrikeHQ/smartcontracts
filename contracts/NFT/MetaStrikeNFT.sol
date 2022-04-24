@@ -23,6 +23,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
     uint256 constant ONE_HUNRED = 10000;
+    uint8 public tiers;
 
     struct WeaponInfo {
         uint8 weaponCat;
@@ -36,10 +37,12 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     }
 
     mapping (uint256 => WeaponInfo) public weapons;
+    mapping (uint8 => uint256) private _tierPoint;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
 
     event MetaStrikeMinted(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock);
+    event MetalAttached(address user, uint256 tokenId, uint256[] metals, bool[] result, uint8 newSlot, uint8 newTier, uint256 newPoint);
 
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -52,6 +55,13 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     function setupMetalAddress(address newMetal) external onlyRole(DEFAULT_ADMIN_ROLE) {
         metalAddress = newMetal;
+    }
+
+    function setupTierPoint(uint256[] calldata points, uint8 _tiers) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        tiers = _tiers;
+        for (uint8 i = 0; i < points.length; i ++) {
+            _tierPoint[i] = points[i];
+        }
     }
 
     function getCurrentTokenId() external view returns (uint256 tokenId) {
@@ -96,8 +106,11 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     
     // Advance MetaStrike NFT
     function attachMetal(uint256[] memory metalIds, uint256 tokenId) external {
-        require(metalIds.length <= weapons[tokenId].slot, "Insufficient slot!");
+        WeaponInfo storage weapon = weapons[tokenId];
+        require(metalIds.length <= weapon.slot, "Insufficient slot!");
         require(ownerOf(tokenId) == msg.sender, "Insufficient ownership!");
+        bool[] memory result = new bool[](metalIds.length);
+        uint256 oldPoint = weapon.point;
         for (uint256 i = 0; i < metalIds.length; i ++ ) {
             IMetal(metalAddress).burn(msg.sender, metalIds[i], 1);
             uint256 ranNumber = _randomUint256(ONE_HUNRED);
@@ -105,8 +118,15 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
             if (ranNumber <= percent) {
                 weapons[tokenId].slot -= 1;
                 weapons[tokenId].point += point;
+                result[i] = true;
             }
         }
+        if (weapon.point > oldPoint ) {
+            if (weapon.point > _tierPoint[weapon.tier + 1] && weapon.tier < tiers -1 ) {
+                weapon.tier += 1;
+            }
+        }
+        emit MetalAttached(msg.sender, tokenId, metalIds, result, weapon.slot, weapon.tier, weapon.point);
     }
 
     function _randomUint256(uint256 ranged) internal view returns (uint256 rnd) {
