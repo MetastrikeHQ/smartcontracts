@@ -20,6 +20,7 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         uint256 metalId;
         address paymentToken;
         uint256 price;
+        uint256 totalAmount;
         uint256 acquired;
     }
 
@@ -42,8 +43,8 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         _grantRole(MINTER_ROLE, msg.sender);
     }
 
-    function getMetalInfo(uint256 id) public view returns (uint256, uint256, uint256, uint256) {
-        return (metals[id].kind, metals[id].level, metals[id].point, metals[id].percentage);
+    function getMetalInfo(uint256 id) public view returns (uint256, uint256) {
+        return (metals[id].point, metals[id].percentage);
     }
 
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
@@ -55,12 +56,9 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         metals[metalId] = MetalInfo (_kind, _level, _point, _percentage);
     }
 
-    function setupAccquire(uint256 _acquireId, bool _status, uint256 _metalId, address _paymentToken, uint256 _price) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 acquired;
-        if (acquireInfo[_acquireId].acquired != 0) {
-            acquired = acquireInfo[_acquireId].acquired;
-        }
-        acquireInfo[_acquireId] = AcquireInfo(_status, _metalId, _paymentToken, _price, acquired);
+    function setupAccquire(uint256 _acquireId, bool _status, uint256 _metalId, address _paymentToken, uint256 _price, uint256 _totalAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 acquired = acquireInfo[_acquireId].acquired;
+        acquireInfo[_acquireId] = AcquireInfo(_status, _metalId, _paymentToken, _price, _totalAmount, acquired);
     }
 
     function acquire(uint256 _acquireId, uint256 _amount, bytes memory data) public {
