@@ -22,10 +22,10 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
-    uint256[6] _nullMetal;
+    uint256 constant ONE_HUNRED = 10000;
 
     struct WeaponInfo {
-        bool weaponCat;
+        uint8 weaponCat;
         uint256 weaponType;
         uint256 skin;
         uint256 color;
@@ -39,7 +39,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
 
-    event MetaStrikeMinted(address to, bool _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock);
+    event MetaStrikeMinted(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock);
 
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -47,7 +47,11 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     }
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://resource.metastrike.io/mts/{id}.json";
+        return "https://resource.metastrike.io/mts/";
+    }
+
+    function setupMetalAddress(address newMetal) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        metalAddress = newMetal;
     }
 
     function getCurrentTokenId() external view returns (uint256 tokenId) {
@@ -62,7 +66,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         }
     }
 
-    function safeMint(address to, bool _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
+    function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
     public onlyRole(MINTER_ROLE) {
         uint256 tokenId = _tokenIdCounter.current();
         weapons[tokenId] = WeaponInfo(_weaponCat, _weapon, _skin, _color, _tier, _slot, _points, _timeLock);
@@ -92,13 +96,12 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     
     // Advance MetaStrike NFT
     function attachMetal(uint256[] memory metalIds, uint256 tokenId) external {
-        require(metalIds.length <= weapons[tokenId].slot, "Can not add more than the slot you are having!");
-        require(ownerOf(tokenId) == msg.sender, "You are not the owner of nftId");
-        uint256 ONE_HUNRED = 10000;
+        require(metalIds.length <= weapons[tokenId].slot, "Insufficient slot!");
+        require(ownerOf(tokenId) == msg.sender, "Insufficient ownership!");
         for (uint256 i = 0; i < metalIds.length; i ++ ) {
             IMetal(metalAddress).burn(msg.sender, metalIds[i], 1);
             uint256 ranNumber = _randomUint256(ONE_HUNRED);
-            (,,uint256 point, uint256 percent) = IMetal(metalAddress).getMetalInfo(metalIds[i]);
+            (uint256 point, uint256 percent) = IMetal(metalAddress).getMetalInfo(metalIds[i]);
             if (ranNumber <= percent) {
                 weapons[tokenId].slot -= 1;
                 weapons[tokenId].point += point;
