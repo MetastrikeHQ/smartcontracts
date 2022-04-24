@@ -26,12 +26,14 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     address public metastrikeCore;
     string public constant name = "Metastrike Box";
+    string public constant ticker = "MTB";
 
     struct BoxInfo {
+        uint8 weaponCat;
         uint256 weapons;
-        uint8 tier;
         uint256 skins;
         uint8 colors;
+        uint8 tier;
         uint8[] slots;
         uint256[] weightedSlots;
     }
@@ -94,9 +96,9 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         _unpause();
     }
 
-    function setupBox(uint8 _boxId, uint256 _weapons, uint8 _tier, uint256 _skin, uint8 _color, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setupBox(uint8 _boxId, uint8 _weaponCat, uint256 _weapons, uint256 _skin, uint8 _color, uint8 _tier, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(boxesInfo[_boxId].weapons == 0, "Box already set up!");
-        boxesInfo[_boxId] = BoxInfo(_weapons, _tier, _skin, _color, _slots, _weightedSlots);
+        boxesInfo[_boxId] = BoxInfo(_weapon, _skin, _colors, _tier, _slots, _weightedSlots);
     }
 
     function setupSell(uint8 _sellId, uint8 _boxId, address _paymentToken, uint256 _price, uint256 _totalAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -159,11 +161,13 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint256 ran = randomWords[0];
         burn(boxOwner, boxId, 1);
         BoxInfo memory boxInfo = boxesInfo[boxId];
+        uint256 weaponCat =  boxInfo.weaponCat;
         uint256 weaponType = ran % boxInfo.weapons;
         uint256 weaponSkin = ran % boxInfo.skins;
         uint8 weaponColor = uint8(ran % boxInfo.colors);
         uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots)];
-        IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, 600);
+        // function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
+        IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, 600);
     }
 
     function _weightedRandomArray(uint256[] memory weightedChoices) internal view returns (uint256) {
