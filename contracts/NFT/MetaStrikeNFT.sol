@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 interface IMetal is IERC1155 {
-    function getMetalInfo(uint256 metalId) external view returns (uint256, uint256, uint256, uint256);
+    function getMetalInfo(uint256 metalId) external view returns (uint256, uint256);
     function burnBatch(address account, uint256[] memory ids, uint256[] memory values) external;
     function burn(address account, uint256 id, uint256 value) external;
 }
