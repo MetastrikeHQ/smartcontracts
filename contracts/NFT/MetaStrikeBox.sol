@@ -13,7 +13,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
 interface IMetaStrikeCore {
-    function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _timeLock) external;
+    function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _point, uint256 _timeLock) external;
 }
 
 /// @custom:security-contact security@metastrike.io
@@ -25,15 +25,18 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     address public metastrikeCore;
+    address public mtsERC20;
     string public constant name = "Metastrike Box";
     string public constant ticker = "MTB";
 
     struct BoxInfo {
+        uint256 openFee;
         uint8 weaponCat;
         uint256 weapons;
         uint256 skins;
         uint8 colors;
         uint8 tier;
+        uint256[] tierToPoints;
         uint8[] slots;
         uint256[] weightedSlots;
     }
@@ -43,6 +46,8 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         address paymentToken;
         uint256 price;
         uint256 totalAmount;
+        uint256 startDate;
+        uint256 endDate;
         uint256 purchased;
     }
 
@@ -77,8 +82,9 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     event BoxBought(address buyer, uint8 sellId, uint8 boxId, uint256 amount);
 
-    constructor(address _metastrikeCore,uint64 subscriptionId) ERC1155("https://resource.metastrike.io/box/{id}.json") VRFConsumerBaseV2(vrfCoordinator) {
+    constructor(address _metastrikeCore, address _mtsERC20, uint64 subscriptionId) ERC1155("https://resource.metastrike.io/box/{id}.json") VRFConsumerBaseV2(vrfCoordinator) {
         metastrikeCore = _metastrikeCore;
+        mtsERC20 = _mtsERC20;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
@@ -96,21 +102,22 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         _unpause();
     }
 
-    function setupBox(uint8 _boxId, uint8 _weaponCat, uint256 _weapons, uint256 _skins, uint8 _colors, uint8 _tier, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(boxesInfo[_boxId].weapons == 0, "Box already set up!");
-        boxesInfo[_boxId] = BoxInfo(_weaponCat, _weapons, _skins, _colors, _tier, _slots, _weightedSlots);
+    function setupBox(uint8 _boxId, uint256 _openFee, uint8 _weaponCat, uint256 _weapons, uint256 _skins, uint8 _colors, uint8 _tier, uint256[] memory _tierToPoints, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        // require(boxesInfo[_boxId].weapons == 0, "Box already set up!");
+        boxesInfo[_boxId] = BoxInfo(_openFee, _weaponCat, _weapons, _skins, _colors, _tier, _tierToPoints, _slots, _weightedSlots);
     }
 
-    function setupSell(uint8 _sellId, uint8 _boxId, address _paymentToken, uint256 _price, uint256 _totalAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setupSell(uint8 _sellId, uint8 _boxId, address _paymentToken, uint256 _price, uint256 _totalAmount, uint256 _startDate, uint256 _endDate) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 purchased;
         if (sellInfo[_sellId].purchased != 0) {
             purchased = sellInfo[_sellId].purchased;
         }
-        sellInfo[_sellId] = SellInfo(_boxId, _paymentToken, _price, _totalAmount, purchased);
+        sellInfo[_sellId] = SellInfo(_boxId, _paymentToken, _price, _totalAmount, _startDate, _endDate, purchased);
     }
 
     function buyBox(uint8 _sellId, uint256 _amount, bytes memory data) public {
         SellInfo storage deal = sellInfo[_sellId];
+        require(block.timestamp >= deal.startDate && block.timestamp <= deal.endDate, "Box is not available!");
         require(deal.purchased + _amount <= deal.totalAmount, "Box was out of stock");
         IERC20(deal.paymentToken).safeTransferFrom(msg.sender, address(this), deal.price * _amount);
         deal.purchased += _amount;
@@ -144,12 +151,13 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     function openBox(uint256 _id) external returns (uint256) {
         require(msg.sender == tx.origin, "Nope lah!");
+        IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
         uint256 requestId = COORDINATOR.requestRandomWords(keyHash,s_subscriptionId,requestConfirmations,callbackGasLimit,numWords);
         RequestInfo storage requestInfo = RequestInfos[requestId];
         requestInfo.boxOwner = msg.sender;
         requestInfo.boxId = _id;
         s_requestIdToBoxOwer[requestId] = msg.sender;
-        s_requestIdToBoxId[requestId] = _id ; 
+        s_requestIdToBoxId[requestId] = _id ;
         s_requestId = requestId;
         return requestId;
     }
@@ -167,7 +175,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint8 weaponColor = uint8(ran % boxInfo.colors);
         uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots)];
         // function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
-        IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, 600);
+        IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, boxInfo.tierToPoints[boxInfo.tier], 600);
     }
 
     function _weightedRandomArray(uint256[] memory weightedChoices) internal view returns (uint256) {
