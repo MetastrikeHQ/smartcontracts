@@ -41,7 +41,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
 
-    event MetaStrikeMinted(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock);
+    event MetaStrikeMinted(address to, uint256 tokenId, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock);
     event MetalAttached(address user, uint256 tokenId, uint256[] metals, bool[] result, uint8 newSlot, uint8 newTier, uint256 newPoint);
 
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
@@ -81,7 +81,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         uint256 tokenId = _tokenIdCounter.current();
         weapons[tokenId] = WeaponInfo(_weaponCat, _weapon, _skin, _color, _tier, _slot, _points, _timeLock);
         _tokenIdCounter.increment();
-        emit MetaStrikeMinted(to, _weaponCat, _weapon, _skin, _color, _tier, _slot, _points, _timeLock);
+        emit MetaStrikeMinted(to, tokenId, _weaponCat, _weapon, _skin, _color, _tier, _slot, _points, _timeLock);
         _safeMint(to, tokenId);
     }
 

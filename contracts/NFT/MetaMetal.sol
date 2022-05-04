@@ -66,6 +66,7 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         require(acquiring.status, "Acquiring not available!");
         uint256 totalPrice = acquiring.price * _amount;
         IERC20(acquiring.paymentToken).safeTransferFrom(msg.sender, address(this), totalPrice);
+        acquiring.acquired += 1;
         _mint(msg.sender, acquiring.metalId, _amount, data);
         emit Acquired(msg.sender, _acquireId, acquiring.metalId, _amount);
     }
