@@ -30,7 +30,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         uint256 weaponType;
         uint256 skin;
         uint256 color;
-        uint8 tier; // 1 = uncom; 2 = silver; 3 = gold; 4 = diamond
+        uint8 tier; // 0 = uncom; 1 = silver; 2 = gold; 3 = diamond
         uint8 slot;
         uint256 point;
         uint256 releaseTime;
