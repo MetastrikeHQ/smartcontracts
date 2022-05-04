@@ -38,6 +38,9 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
 
     event Acquired(address acquirer, uint256 acquireId, uint256 metalId, uint256 amount);
 
+    string public name = "Metastrike Metal";
+    string public symbol = "MSM";
+
     constructor() ERC1155("https://resource.metastrike.io/metal/{id}.json") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(URI_SETTER_ROLE, msg.sender);
