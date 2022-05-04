@@ -68,14 +68,6 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     address s_owner;
     uint32 numWords =  1;
 
-    struct RequestInfo {
-        address boxOwner;
-        uint256 boxId;
-        uint256[] randomReses;
-    }
-
-    mapping(uint256 => RequestInfo) public RequestInfos;
-
     mapping(uint256 => address) public s_requestIdToBoxOwer;
     mapping(uint256 => uint256) public s_requestIdToBoxId; 
     mapping(uint256 => uint256[]) public s_requestIdToRandom;
@@ -153,9 +145,6 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         require(msg.sender == tx.origin, "Nope lah!");
         IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
         uint256 requestId = COORDINATOR.requestRandomWords(keyHash,s_subscriptionId,requestConfirmations,callbackGasLimit,numWords);
-        RequestInfo storage requestInfo = RequestInfos[requestId];
-        requestInfo.boxOwner = msg.sender;
-        requestInfo.boxId = _id;
         s_requestIdToBoxOwer[requestId] = msg.sender;
         s_requestIdToBoxId[requestId] = _id ;
         s_requestId = requestId;
