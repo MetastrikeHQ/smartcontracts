@@ -21,6 +21,8 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         address paymentToken;
         uint256 price;
         uint256 totalAmount;
+        uint256 startDate;
+        uint256 endDate;
         uint256 acquired;
     }
 
@@ -56,17 +58,19 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         metals[metalId] = MetalInfo (_kind, _level, _point, _percentage);
     }
 
-    function setupAccquire(uint256 _acquireId, bool _status, uint256 _metalId, address _paymentToken, uint256 _price, uint256 _totalAmount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setupAccquire(uint256 _acquireId, bool _status, uint256 _metalId, address _paymentToken, uint256 _price, uint256 _totalAmount, uint256 _startDate, uint256 _endDate) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 acquired = acquireInfo[_acquireId].acquired;
-        acquireInfo[_acquireId] = AcquireInfo(_status, _metalId, _paymentToken, _price, _totalAmount, acquired);
+        acquireInfo[_acquireId] = AcquireInfo(_status, _metalId, _paymentToken, _price, _totalAmount, _startDate, _endDate, acquired);
     }
 
     function acquire(uint256 _acquireId, uint256 _amount, bytes memory data) public {
         AcquireInfo storage acquiring = acquireInfo[_acquireId];
         require(acquiring.status, "Acquiring not available!");
+        require(acquiring.acquired + _amount <= acquiring.totalAmount, "Insufficient Amount!");
+        require(acquiring.startDate <= block.timestamp && block.timestamp <= acquiring.endDate, "Acquiring not available!");
         uint256 totalPrice = acquiring.price * _amount;
         IERC20(acquiring.paymentToken).safeTransferFrom(msg.sender, address(this), totalPrice);
-        acquiring.acquired += 1;
+        acquiring.acquired += _amount;
         _mint(msg.sender, acquiring.metalId, _amount, data);
         emit Acquired(msg.sender, _acquireId, acquiring.metalId, _amount);
     }
