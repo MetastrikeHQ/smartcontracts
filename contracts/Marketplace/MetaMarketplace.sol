@@ -166,6 +166,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		uint256 _startedAt,
 		uint256 _expiredAt
 	) external  {
+		require(nfts[_nftAddress].allowed, "MM: This nft was NOT accepted!");
 		require(isPaymentAccepted[_paymentToken], "MM: This payment was NOT accepted!");
 		require(_unitPrice > 0, "MM: The unitPrice should be greater than zero!");
 		require(
