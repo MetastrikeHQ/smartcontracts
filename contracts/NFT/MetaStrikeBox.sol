@@ -143,6 +143,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     function openBox(uint256 _id) external returns (uint256) {
         require(msg.sender == tx.origin, "Nope lah!");
+        burn(msg.sender, _id, 1);
         IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
         uint256 requestId = COORDINATOR.requestRandomWords(keyHash,s_subscriptionId,requestConfirmations,callbackGasLimit,numWords);
         s_requestIdToBoxOwer[requestId] = msg.sender;
