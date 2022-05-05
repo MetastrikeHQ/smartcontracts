@@ -51,7 +51,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	// token address => amount , address(0) for nativeChainCoin
 	mapping(address => uint256) public marketTreasury;
 
-	uint256 private constant ONE_HUNDER_PERCENT = 10 ** 5; // with 3 decimals
+	uint256 private constant ONE_HUNDRED_PERCENT = 10 ** 5; // with 3 decimals
 	uint256 private constant TEN_PERCENT = 10 ** 4; // with 3 decimals
 	uint256 public marketFee;
 
@@ -228,7 +228,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 
 
 		uint256 totalPrice =  listing.unitPrice * _itemAmount;
-		uint256 marketCut = marketFee * totalPrice / ONE_HUNDER_PERCENT;
+		uint256 marketCut = marketFee * totalPrice / ONE_HUNDRED_PERCENT;
 		listing.availableQuantity -= _itemAmount;
 
 		// Transfer NFT assets
@@ -314,7 +314,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		require(listing.status, "MM: Listing was canceled!");
 
 		uint256 totalPrice =  offer.unitPrice * offer.amount;
-		uint256 marketCut = marketFee * totalPrice / ONE_HUNDER_PERCENT;
+		uint256 marketCut = marketFee * totalPrice / ONE_HUNDRED_PERCENT;
 		listing.availableQuantity -= offer.amount;
 		offer.amount = 0;
 		// Transfer NFT assets
