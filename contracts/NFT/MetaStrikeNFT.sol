@@ -22,7 +22,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
-    uint256 constant ONE_HUNRED = 10000;
+    uint256 constant ONE_HUNDRED = 10000;
     uint8 public tiers;
 
     struct WeaponInfo {
@@ -113,17 +113,18 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         uint256 oldPoint = weapon.point;
         for (uint256 i = 0; i < metalIds.length; i ++ ) {
             IMetal(metalAddress).burn(msg.sender, metalIds[i], 1);
-            uint256 ranNumber = _randomUint256(ONE_HUNRED);
+            uint256 ranNumber = _randomUint256(ONE_HUNDRED);
             (uint256 point, uint256 percent) = IMetal(metalAddress).getMetalInfo(metalIds[i]);
             if (ranNumber <= percent) {
                 weapons[tokenId].slot -= 1;
                 weapons[tokenId].point += point;
                 result[i] = true;
-            }
-        }
-        if (weapon.point > oldPoint ) {
-            if (weapon.point > _tierPoint[weapon.tier + 1] && weapon.tier < tiers -1 ) {
-                weapon.tier += 1;
+
+                if (weapon.point > oldPoint ) {
+                    if (weapon.point > _tierPoint[weapon.tier + 1] && weapon.tier < tiers -1 ) {
+                        weapon.tier += 1;
+                    }
+                }
             }
         }
         emit MetalAttached(msg.sender, tokenId, metalIds, result, weapon.slot, weapon.tier, weapon.point);
