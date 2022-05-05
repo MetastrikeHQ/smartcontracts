@@ -38,8 +38,8 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
 
     event Acquired(address acquirer, uint256 acquireId, uint256 metalId, uint256 amount);
 
-    string public name = "Metastrike Metal";
-    string public symbol = "MSM";
+    string public constant name = "Metastrike Metal";
+    string public constant symbol = "MSM";
 
     constructor() ERC1155("https://resource.metastrike.io/metal/{id}.json") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -60,7 +60,7 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         metals[metalId] = MetalInfo (_kind, _level, _point, _percentage);
     }
 
-    function setupAccquire(uint256 _acquireId, uint256 _metalId, address _paymentToken, uint256 _price, uint256 _totalAmount, uint256 _startDate, uint256 _endDate) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setupAcquire(uint256 _acquireId, uint256 _metalId, address _paymentToken, uint256 _price, uint256 _totalAmount, uint256 _startDate, uint256 _endDate) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 acquired = acquireInfo[_acquireId].acquired;
         acquireInfo[_acquireId] = AcquireInfo(_metalId, _paymentToken, _price, _totalAmount, _startDate, _endDate, acquired);
     }
