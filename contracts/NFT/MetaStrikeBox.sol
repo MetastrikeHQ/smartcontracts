@@ -162,18 +162,18 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint256 weaponType = ran % boxInfo.weapons;
         uint256 weaponSkin = ran % boxInfo.skins;
         uint8 weaponColor = uint8(ran % boxInfo.colors);
-        uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots)];
+        uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots,ran)];
         // function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
         IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, boxInfo.points, 600);
     }
 
-    function _weightedRandomArray(uint256[] memory weightedChoices) internal view returns (uint256) {
+    function _weightedRandomArray(uint256[] memory weightedChoices, uint256 _ran) internal view returns (uint256) {
         uint256 sumOfWeight = 0;
         uint256 numChoices = weightedChoices.length;
         for(uint256 i=0; i<numChoices; i++) {
             sumOfWeight += weightedChoices[i];
         }
-        uint256 rnd = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp, gasleft(), msg.sender, sumOfWeight)));
+        uint256 rnd = _ran;
         rnd = rnd % sumOfWeight;
         for(uint256 i=0; i<numChoices; i++) {
             if(rnd < weightedChoices[i])
@@ -181,11 +181,6 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
             rnd -= weightedChoices[i];
         }
         return 0;
-    }
-
-    function _randomUint256(uint256 ranged) internal view returns (uint256 rnd) {
-        rnd = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp, gasleft(), msg.sender)));
-        rnd = rnd % ranged;
     }
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
