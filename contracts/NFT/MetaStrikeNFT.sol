@@ -58,6 +58,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     }
 
     function setupTierPoint(uint256[] calldata points, uint8 _tiers) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_tiers == points.length, 'Invalid configuration');
         tiers = _tiers;
         for (uint8 i = 0; i < points.length; i ++) {
             _tierPoint[i] = points[i];
