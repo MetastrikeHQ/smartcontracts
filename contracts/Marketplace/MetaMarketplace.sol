@@ -139,7 +139,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	 * @param _fee - Share amount, from 0 to 10000 (0% -> 10%)
 	 */
 	function updateMarketFee(uint256 _fee) public onlyOwner {
-		require(_fee < TEN_PERCENT, "MM: Market Fee should less than 10%!");
+		require(_fee <= TEN_PERCENT, "MM: Market Fee should less than 10%!");
 
 		marketFee = _fee;
 		emit MarketFeeUpdated(_fee);
