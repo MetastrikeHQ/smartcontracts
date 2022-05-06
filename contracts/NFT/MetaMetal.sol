@@ -36,6 +36,8 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
 
     mapping (uint256 => AcquireInfo) public acquireInfo;
 
+    uint256 public totalMetalSale;
+
     event Acquired(address acquirer, uint256 acquireId, uint256 metalId, uint256 amount);
 
     string public constant name = "Metastrike Metal";
@@ -71,6 +73,7 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
         require(acquiring.startDate <= block.timestamp && block.timestamp <= acquiring.endDate, "Acquiring not available!");
         uint256 totalPrice = acquiring.price * _amount;
         IERC20(acquiring.paymentToken).safeTransferFrom(msg.sender, address(this), totalPrice);
+        totalMetalSale += totalPrice;
         acquiring.acquired += _amount;
         _mint(msg.sender, acquiring.metalId, _amount, data);
         emit Acquired(msg.sender, _acquireId, acquiring.metalId, _amount);
