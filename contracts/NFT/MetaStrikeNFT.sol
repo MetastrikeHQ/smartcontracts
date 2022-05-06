@@ -14,15 +14,25 @@ interface IMetal is IERC1155 {
     function burn(address account, uint256 id, uint256 value) external;
 }
 
+interface VerichainsNetRegistry {
+    function randomService(uint256 key) external returns(VerichainsNetRandomService);
+}
+
+interface VerichainsNetRandomService {
+    function random() external returns(uint256);
+}
+
 /// @custom:security-contact security@metastrike.io
 contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     using Counters for Counters.Counter;
 
     address metalAddress;
+    address public randomRegistry;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
     uint256 constant ONE_HUNDRED = 10000;
+    uint256 constant randomKey = 0xc9821440a2c2cc97acac89148ac13927dead00238693487a9c84dfe89e28a284;
     uint8 public tiers;
 
     struct WeaponInfo {
@@ -38,11 +48,13 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     mapping (uint256 => WeaponInfo) public weapons;
     mapping (uint8 => uint256) private _tierPoint;
+    
 
     /// @custom:oz-upgrades-unsafe-allow constructor
 
     event MetaStrikeMinted(address to, uint256 tokenId, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock);
     event MetalAttached(address user, uint256 tokenId, uint256[] metals, bool[] result, uint8 newSlot, uint8 newTier, uint256 newPoint);
+    event RandomNumber(uint256 _value);
 
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -55,6 +67,10 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     function setupMetalAddress(address newMetal) external onlyRole(DEFAULT_ADMIN_ROLE) {
         metalAddress = newMetal;
+    }
+
+    function setupRandomRegistry(address newRandomRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        randomRegistry = newRandomRegistry;
     }
 
     function setupTierPoint(uint256[] calldata points, uint8 _tiers) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -131,8 +147,9 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         emit MetalAttached(msg.sender, tokenId, metalIds, result, weapon.slot, weapon.tier, weapon.point);
     }
 
-    function _randomUint256(uint256 ranged) internal view returns (uint256 rnd) {
-        rnd = uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp, gasleft(), msg.sender)));
-        rnd = rnd % ranged;
+    function _randomUint256(uint256 ranged) internal returns (uint256 randomNumber) {
+        randomNumber = VerichainsNetRegistry(randomRegistry).randomService(MetaStrikeCore.randomKey).random();
+        randomNumber = randomNumber % ranged;
+        emit RandomNumber(randomNumber);
     }
 }
