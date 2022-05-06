@@ -229,6 +229,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 
 		uint256 totalPrice =  listing.unitPrice * _itemAmount;
 		uint256 marketCut = marketFee * totalPrice / ONE_HUNDRED_PERCENT;
+		marketTreasury[listing.paymentToken] += marketCut;
 		listing.availableQuantity -= _itemAmount;
 
 		// Transfer NFT assets
@@ -315,6 +316,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 
 		uint256 totalPrice =  offer.unitPrice * offer.amount;
 		uint256 marketCut = marketFee * totalPrice / ONE_HUNDRED_PERCENT;
+		marketTreasury[listing.paymentToken] += marketCut;
 		listing.availableQuantity -= offer.amount;
 		offer.amount = 0;
 		// Transfer NFT assets
