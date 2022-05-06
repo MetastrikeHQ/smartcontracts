@@ -157,7 +157,6 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         address boxOwner = s_requestIdToBoxOwer[requestId];
         uint256 boxId = s_requestIdToBoxId[requestId];
         uint256 ran = randomWords[0];
-        burn(boxOwner, boxId, 1);
         BoxInfo memory boxInfo = boxesInfo[boxId];
         uint8 weaponCat =  boxInfo.weaponCat;
         uint256 weaponType = ran % boxInfo.weapons;
