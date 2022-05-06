@@ -26,6 +26,8 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     address public metastrikeCore;
     address public mtsERC20;
+    uint256 public totalOpenningFee;
+    uint256 public totalBoxSale;
     string public constant name = "Metastrike Box";
     string public constant ticker = "MTB";
 
@@ -112,6 +114,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         require(block.timestamp >= deal.startDate && block.timestamp <= deal.endDate, "Box is not available!");
         require(deal.purchased + _amount <= deal.totalAmount, "Box was out of stock");
         IERC20(deal.paymentToken).safeTransferFrom(msg.sender, address(this), deal.price * _amount);
+        totalBoxSale += deal.price * _amount;
         deal.purchased += _amount;
         _mint(msg.sender, deal.boxId, _amount, data);
         emit BoxBought(msg.sender, _sellId, deal.boxId, _amount);
@@ -149,6 +152,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         s_requestIdToBoxOwer[requestId] = msg.sender;
         s_requestIdToBoxId[requestId] = _id ;
         s_requestId = requestId;
+        totalOpenningFee += boxesInfo[_id].openFee;
         return requestId;
     }
 
