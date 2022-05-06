@@ -156,18 +156,18 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         s_requestIdToRandom[requestId] = randomWords;
         address boxOwner = s_requestIdToBoxOwer[requestId];
         uint256 boxId = s_requestIdToBoxId[requestId];
-        uint256 ran = randomWords[0];
+        uint256 rand = randomWords[0];
         BoxInfo memory boxInfo = boxesInfo[boxId];
         uint8 weaponCat =  boxInfo.weaponCat;
-        uint256 weaponType = ran % boxInfo.weapons;
-        uint256 weaponSkin = ran % boxInfo.skins;
-        uint8 weaponColor = uint8(ran % boxInfo.colors);
-        uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots,ran)];
+        uint256 weaponType = rand % boxInfo.weapons;
+        uint256 weaponSkin = rand % boxInfo.skins;
+        uint8 weaponColor = uint8(rand % boxInfo.colors);
+        uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots,rand)];
         // function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
         IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, boxInfo.points, 600);
     }
 
-    function _weightedRandomArray(uint256[] memory weightedChoices, uint256 _ran) internal view returns (uint256) {
+    function _weightedRandomArray(uint256[] memory weightedChoices, uint256 _ran) internal pure returns (uint256) {
         uint256 sumOfWeight = 0;
         uint256 numChoices = weightedChoices.length;
         for(uint256 i=0; i<numChoices; i++) {
