@@ -16,6 +16,14 @@ interface IMetaStrikeCore {
     function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier,  uint8 _slot, uint256 _point, uint256 _timeLock) external;
 }
 
+interface VerichainsNetRegistry {
+    function randomService(uint256 key) external returns(VerichainsNetRandomService);
+}
+
+interface VerichainsNetRandomService {
+    function random() external returns(uint256);
+}
+
 /// @custom:security-contact security@metastrike.io
 contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRFConsumerBaseV2 {
 
@@ -30,6 +38,8 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     uint256 public totalBoxSale;
     string public constant name = "Metastrike Box";
     string public constant ticker = "MTB";
+    uint256 constant randomKey = 0xc9821440a2c2cc97acac89148ac13927dead00238693487a9c84dfe89e28a284;
+    address public randomRegistry;
 
     struct BoxInfo {
         uint256 openFee;
@@ -94,6 +104,10 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
+    }
+
+    function setupRandomRegistry(address newRandomRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        randomRegistry = newRandomRegistry;
     }
 
     function setupBox(uint8 _boxId, uint256 _openFee, uint8 _weaponCat, uint256 _weapons, uint256 _skins, uint8 _colors, uint8 _tier, uint256 _points, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -169,6 +183,22 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots,rand)];
         // function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
         IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, boxInfo.points, 600);
+    }
+
+    function openBox2(uint256 _id) external returns (uint256) {
+        require(msg.sender == tx.origin, "Nope lah!");
+        burn(msg.sender, _id, 1);
+        IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
+        uint256 randomNumber = VerichainsNetRegistry(randomRegistry).randomService(MetaStrikeBox.randomKey).random();
+        totalOpenningFee += boxesInfo[_id].openFee;
+        BoxInfo memory boxInfo = boxesInfo[_id];
+        uint8 weaponCat =  boxInfo.weaponCat;
+        uint256 weaponType = randomNumber % boxInfo.weapons;
+        uint256 weaponSkin = randomNumber % boxInfo.skins;
+        uint8 weaponColor = uint8(randomNumber % boxInfo.colors);
+        uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots,randomNumber)];
+        IMetaStrikeCore(metastrikeCore).safeMint(msg.sender, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, boxInfo.points, 600);
+        return randomNumber;
     }
 
     function _weightedRandomArray(uint256[] memory weightedChoices, uint256 _ran) internal pure returns (uint256) {
