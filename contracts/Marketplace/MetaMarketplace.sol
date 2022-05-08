@@ -45,6 +45,8 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	Listing[] public listings;
 	Offer[] public offers;
 
+	bool public listingOperating;
+	bool public offerOperating;
 
 	mapping(address => bool) public isPaymentAccepted;
 
@@ -83,7 +85,19 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		setPaymentToken(_paymentToken, true);
 		// Fee init
 		updateMarketFee(_marketFee);
+		listingOperating = true;
+
 	}
+
+	modifier whenListingOperating() {
+        require(listingOperating, "Listing: paused");
+        _;
+    }
+
+	modifier whenOfferOperating() {
+        require(offerOperating, "Offer: paused");
+        _;
+    }
 
 	function getNoListings() external view returns (uint256) {
 		return listings.length;
@@ -98,6 +112,11 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		require(marketTreasury[_tokenAddress] > 0, "MM: This treasury was not in pool!");
 		_transfer(_tokenAddress, _to, marketTreasury[_tokenAddress]);
 		marketTreasury[_tokenAddress] = 0;
+	}
+
+	function operation(bool newListing, bool newOffer) external onlyOwner {
+		listingOperating = newListing;
+		offerOperating = newOffer;
 	}
 
 	/**
@@ -165,7 +184,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		uint256 _unitPrice,
 		uint256 _startedAt,
 		uint256 _expiredAt
-	) external  {
+	) external whenListingOperating {
 		require(nfts[_nftAddress].allowed, "MM: This nft was NOT accepted!");
 		require(isPaymentAccepted[_paymentToken], "MM: This payment was NOT accepted!");
 		require(_unitPrice > 0, "MM: The unitPrice should be greater than zero!");
@@ -205,7 +224,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	function buyAsset(
 		uint256 _listingId,
 		uint256 _itemAmount
-	) external payable {
+	) external whenListingOperating payable {
 		Listing storage listing = listings[_listingId];
 
 		require(listing.availableQuantity >= _itemAmount, "MM: Out of stock!");
@@ -254,7 +273,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	 * @param _listingId ID of listing items
 	 * emit {CancelList} event
 	 */
-	function cancelListing(uint256 _listingId) external {
+	function cancelListing(uint256 _listingId) whenOfferOperating external {
 		Listing storage listing = listings[_listingId];
 		require(listing.seller == msg.sender, "MM: You was NOT the seller!");
 		require(listing.availableQuantity > 0 , "MM: This listing was done!");
@@ -266,7 +285,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		emit ListingCanceled(_listingId);
 	}
 
-	function creatOffer(uint256 _listingId, uint256 _proposedAmount, uint256 _proposedPrice) payable external {
+	function createOffer(uint256 _listingId, uint256 _proposedAmount, uint256 _proposedPrice) payable whenOfferOperating external {
 		// Offer memory offer = offers[];
 		Listing storage listing = listings[_listingId];
 
@@ -299,7 +318,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		emit OfferCreated(_offerId, msg.sender, _listingId, _proposedAmount, _proposedPrice);
 	}
 
-	function acceptOffer(uint256 _offerId) external {
+	function acceptOffer(uint256 _offerId) external whenOfferOperating {
 		Offer storage offer = offers[_offerId];
 		Listing storage listing = listings[offer.listingId];
 		require(offer.status, "MM: Offer was canceled!");
