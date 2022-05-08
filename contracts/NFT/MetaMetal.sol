@@ -7,13 +7,14 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 /// @custom:security-contact security@metastrike.io
-contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
+contract MetaMetal is ERC1155, AccessControl, Pausable, ERC1155Burnable, ERC1155Supply {
     using SafeERC20 for IERC20;
     
-    bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     struct AcquireInfo {
         uint256 metalId;
@@ -45,16 +46,24 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
 
     constructor() ERC1155("https://resource.metastrike.io/metal/{id}.json") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(URI_SETTER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
     }
 
     function getMetalInfo(uint256 id) public view returns (uint256, uint256) {
         return (metals[id].point, metals[id].percentage);
     }
 
-    function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
+    function setURI(string memory newuri) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _setURI(newuri);
+    }
+
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
     }
 
     function setupMetal(uint256 metalId, uint256 _kind, uint256 _level, uint256 _point, uint256 _percentage) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -107,6 +116,7 @@ contract MetaMetal is ERC1155, AccessControl, ERC1155Burnable, ERC1155Supply {
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
+        whenNotPaused
         override(ERC1155, ERC1155Supply)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
