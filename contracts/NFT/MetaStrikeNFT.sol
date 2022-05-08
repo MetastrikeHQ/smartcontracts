@@ -48,6 +48,8 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     mapping (uint256 => WeaponInfo) public weapons;
     mapping (uint8 => uint256) private _tierPoint;
+
+    bool public attachOperating;
     
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -59,6 +61,15 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
+    }
+
+	modifier whenAttachOperating() {
+        require(attachOperating, "Attach: paused");
+        _;
+    }
+
+    function updateOperation(bool newAttach) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        attachOperating = newAttach;
     }
 
     function _baseURI() internal pure override returns (string memory) {
@@ -122,7 +133,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     }
     
     // Advance MetaStrike NFT
-    function attachMetal(uint256[] memory metalIds, uint256 tokenId) external {
+    function attachMetal(uint256[] memory metalIds, uint256 tokenId) whenAttachOperating external {
         WeaponInfo storage weapon = weapons[tokenId];
         require(metalIds.length <= weapon.slot, "Insufficient slot!");
         require(ownerOf(tokenId) == msg.sender, "Insufficient ownership!");
