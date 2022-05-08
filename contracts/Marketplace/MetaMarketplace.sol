@@ -114,7 +114,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 		marketTreasury[_tokenAddress] = 0;
 	}
 
-	function operation(bool newListing, bool newOffer) external onlyOwner {
+	function updateOperation(bool newListing, bool newOffer) external onlyOwner {
 		listingOperating = newListing;
 		offerOperating = newOffer;
 	}
