@@ -171,10 +171,10 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
         WeaponInfo storage weapon = weapons[tokenId];
         require(metalIds.length <= weapon.slot, "Insufficient slot!");
         require(ownerOf(tokenId) == msg.sender, "Insufficient ownership!");
-        if (mtsToken != address(0)) {
+        if (mtsToken != address(0) && mtsAmountFee > 0) {
             IERC20(mtsToken).safeTransferFrom(msg.sender, address(this), mtsAmountFee);
         }
-        if (mttToken != address(0)) {
+        if (mttToken != address(0) && mttAmountFee > 0) {
             IERC20(mttToken).safeTransferFrom(msg.sender, address(this), mttAmountFee);
         }
         bool[] memory result = new bool[](metalIds.length);
