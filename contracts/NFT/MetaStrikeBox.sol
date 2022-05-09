@@ -63,6 +63,9 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint256 purchased;
     }
 
+    bool public openBoxOperating;
+    bool public openBox2Operating;
+
     mapping (uint256 => BoxInfo) public boxesInfo;
     mapping (uint8 => SellInfo) public sellInfo;
     mapping (uint8 => uint256) public boxTypeToTimeLock;
@@ -108,6 +111,24 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     function setupRandomRegistry(address newRandomRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
         randomRegistry = newRandomRegistry;
+    }
+
+    modifier whenOpenBoxOperating() {
+        require(openBoxOperating, "OpenBox: paused");
+        _;
+    }
+
+    function updateOpenBoxOperating(bool newOpen) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        openBoxOperating = newOpen;
+    }
+
+    modifier whenOpenBox2Operating() {
+        require(openBoxOperating, "OpenBox2: paused");
+        _;
+    }
+
+    function updateOpenBox2Operating(bool newOpen2) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        openBox2Operating = newOpen2;
     }
 
     function setupBox(uint8 _boxId, uint256 _openFee, uint8 _weaponCat, uint256 _weapons, uint256 _skins, uint8 _colors, uint8 _tier, uint256 _points, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -158,7 +179,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         _mintBatch(to, ids, amounts, data);
     }
 
-    function openBox(uint256 _id) external returns (uint256) {
+    function openBox(uint256 _id) whenOpenBoxOperating external returns (uint256) {
         require(msg.sender == tx.origin, "Nope lah!");
         burn(msg.sender, _id, 1);
         IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
@@ -184,7 +205,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw, boxInfo.points, 0);
     }
 
-    function openBox2(uint256 _id) external returns (uint256) {
+    function openBox2(uint256 _id) whenOpenBox2Operating external returns (uint256) {
         require(msg.sender == tx.origin, "Nope lah!");
         burn(msg.sender, _id, 1);
         IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
