@@ -273,7 +273,7 @@ contract MetaMarketplace is Ownable, ERC1155Holder, ERC721Holder {
 	 * @param _listingId ID of listing items
 	 * emit {CancelList} event
 	 */
-	function cancelListing(uint256 _listingId) whenOfferOperating external {
+	function cancelListing(uint256 _listingId) external {
 		Listing storage listing = listings[_listingId];
 		require(listing.seller == msg.sender, "MM: You was NOT the seller!");
 		require(listing.availableQuantity > 0 , "MM: This listing was done!");
