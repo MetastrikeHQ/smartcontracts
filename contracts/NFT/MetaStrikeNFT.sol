@@ -138,7 +138,6 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
         require(metalIds.length <= weapon.slot, "Insufficient slot!");
         require(ownerOf(tokenId) == msg.sender, "Insufficient ownership!");
         bool[] memory result = new bool[](metalIds.length);
-        uint256 oldPoint = weapon.point;
         for (uint256 i = 0; i < metalIds.length; i ++ ) {
             IMetal(metalAddress).burn(msg.sender, metalIds[i], 1);
             uint256 ranNumber = _randomUint256(ONE_HUNDRED);
@@ -147,11 +146,8 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
                 weapons[tokenId].slot -= 1;
                 weapons[tokenId].point += point;
                 result[i] = true;
-
-                if (weapon.point > oldPoint ) {
-                    if (weapon.point > _tierPoint[weapon.tier + 1] && weapon.tier < tiers -1 ) {
-                        weapon.tier += 1;
-                    }
+                if (weapon.point > _tierPoint[weapon.tier + 1] && weapon.tier < tiers -1 ) {
+                    weapon.tier += 1;
                 }
             }
         }
