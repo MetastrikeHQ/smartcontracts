@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -26,8 +28,14 @@ interface VerichainsNetRandomService {
 /// @custom:security-contact security@metastrike.io
 contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burnable {
     using Counters for Counters.Counter;
+    using SafeERC20 for IERC20;
 
-    address metalAddress;
+    address public metalAddress;
+    address public mtsToken;
+    address public mttToken;
+    uint256 public mtsAmountFee;
+    uint256 public mttAmountFee;
+
     address public randomRegistry;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -61,10 +69,16 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
     event MetalAttached(address user, uint256 tokenId, uint256[] metals, bool[] result, uint8 newSlot, uint8 newTier, uint256 newPoint);
     event RandomNumber(uint256 _value);
 
-    constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
+    constructor(address mtsAddress_, address mttAddress_) ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
+        mtsToken = mtsAddress_;
+        mttToken = mttAddress_;
+    }
+
+    function withdrawFee(address token, address to, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        IERC20(token).safeTransfer(to, amount);
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
@@ -90,6 +104,13 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
 
     function setupMetalAddress(address newMetal) external onlyRole(DEFAULT_ADMIN_ROLE) {
         metalAddress = newMetal;
+    }
+
+    function setupFee(address newMts, address newMtt, uint256 newMtsFee, uint256 newMttFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        mtsToken = newMts;
+        mttToken = newMtt;
+        mtsAmountFee = newMtsFee;
+        mttAmountFee = newMttFee;
     }
 
     function setupRandomRegistry(address newRandomRegistry) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -150,6 +171,12 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
         WeaponInfo storage weapon = weapons[tokenId];
         require(metalIds.length <= weapon.slot, "Insufficient slot!");
         require(ownerOf(tokenId) == msg.sender, "Insufficient ownership!");
+        if (mtsToken != address(0)) {
+            IERC20(mtsToken).safeTransferFrom(msg.sender, address(this), mtsAmountFee);
+        }
+        if (mttToken != address(0)) {
+            IERC20(mttToken).safeTransferFrom(msg.sender, address(this), mttAmountFee);
+        }
         bool[] memory result = new bool[](metalIds.length);
         for (uint256 i = 0; i < metalIds.length; i ++ ) {
             IMetal(metalAddress).burn(msg.sender, metalIds[i], 1);
