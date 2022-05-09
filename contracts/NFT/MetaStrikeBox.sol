@@ -182,7 +182,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         uint8 weaponColor = uint8(rand % boxInfo.colors);
         uint8 slotsDraw = boxInfo.slots[_weightedRandomArray(boxInfo.weightedSlots,rand)];
         // function safeMint(address to, uint8 _weaponCat, uint256 _weapon, uint256 _skin, uint8 _color, uint8 _tier, uint8 _slot, uint256 _points, uint256 _timeLock) 
-        IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw-1, boxInfo.points, 600);
+        IMetaStrikeCore(metastrikeCore).safeMint(boxOwner, weaponCat, weaponType, weaponSkin, weaponColor, boxInfo.tier, slotsDraw, boxInfo.points, 0);
     }
 
     function openBox2(uint256 _id) external returns (uint256) {
