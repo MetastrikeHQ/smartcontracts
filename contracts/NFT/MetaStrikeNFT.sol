@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
@@ -23,13 +24,15 @@ interface VerichainsNetRandomService {
 }
 
 /// @custom:security-contact security@metastrike.io
-contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
+contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burnable {
     using Counters for Counters.Counter;
 
     address metalAddress;
     address public randomRegistry;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
     Counters.Counter private _tokenIdCounter;
     uint256 constant ONE_HUNDRED = 10000;
     uint256 constant randomKey = 0xc9821440a2c2cc97acac89148ac13927dead00238693487a9c84dfe89e28a284;
@@ -61,6 +64,15 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
     constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+    }
+
+    function pause() public onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() public onlyRole(PAUSER_ROLE) {
+        _unpause();
     }
 
 	modifier whenAttachOperating() {
@@ -115,6 +127,7 @@ contract MetaStrikeCore is ERC721Enumerable, AccessControl, ERC721Burnable {
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)
         internal
+        whenNotPaused
         override(ERC721, ERC721Enumerable)
     {
         require(weapons[tokenId].releaseTime < block.timestamp, 'MetaStrike: This token was not be released!');
