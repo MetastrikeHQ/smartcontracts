@@ -35,6 +35,8 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
     address public mttToken;
     uint256 public mtsAmountFee;
     uint256 public mttAmountFee;
+    uint256 public mtsTotalAttachFee;
+    uint256 public mttTotalAttachFee;
 
     address public randomRegistry;
 
@@ -173,9 +175,11 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
         require(ownerOf(tokenId) == msg.sender, "Insufficient ownership!");
         if (mtsToken != address(0) && mtsAmountFee > 0) {
             IERC20(mtsToken).safeTransferFrom(msg.sender, address(this), mtsAmountFee);
+            mtsTotalAttachFee += mtsAmountFee;
         }
         if (mttToken != address(0) && mttAmountFee > 0) {
             IERC20(mttToken).safeTransferFrom(msg.sender, address(this), mttAmountFee);
+            mttTotalAttachFee += mttAmountFee;
         }
         bool[] memory result = new bool[](metalIds.length);
         for (uint256 i = 0; i < metalIds.length; i ++ ) {
