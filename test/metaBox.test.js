@@ -38,11 +38,13 @@ describe("Token contract", function () {
     // mined.
     mtsToken = await MtsTokenContract.deploy();
 
+    zeroAdd = '0x0000000000000000000000000000000000000000'
+
     MetaStrikeNFTContract = await hre.ethers.getContractFactory('MetaStrikeCore')
-    mtsNft = await MetaStrikeNFTContract.deploy()
+    mtsNft = await MetaStrikeNFTContract.deploy(zeroAdd, zeroAdd)
 
     MetastrikeBoxContract = await hre.ethers.getContractFactory('MetaStrikeBox')
-    metaBox = await MetastrikeBoxContract.deploy(mtsNft.address)
+    metaBox = await MetastrikeBoxContract.deploy(mtsNft.address, 123)
 
     console.log(deployer.address)
 
@@ -59,16 +61,16 @@ describe("Token contract", function () {
     // });
 
     it("Safe Mint Gun", async function () {
-        await mtsNft.safeMint(deployer.address, 1, 1, 3, 4, 4, 30);
-        await mtsNft.safeMint(deployer.address, 2, 1, 5, 8, 6, 762);
-        await mtsNft.safeMint(deployer.address, 6, 1, 5, 9, 3, 556);
+        await mtsNft.safeMint(deployer.address, 1, 1, 3, 4, 4, 5, 6, 30);
+        await mtsNft.safeMint(deployer.address, 2, 1, 5, 8, 6, 1, 3, 762);
+        await mtsNft.safeMint(deployer.address, 6, 1, 5, 1, 3, 9, 3, 556);
         expect(await mtsNft.balanceOf(deployer.address)).to.be.equal(3);
     });
 
     it("List ownership by address", async function () {
-        await mtsNft.safeMint(deployer.address, 2, 1, 5, 8, 6, 30);
-        await mtsNft.safeMint(deployer.address, 6, 1, 5, 9, 3, 762);
-        await mtsNft.safeMint(deployer.address, 1, 1, 3, 4, 4, 556);
+      await mtsNft.safeMint(deployer.address, 1, 1, 3, 4, 4, 5, 6, 30);
+      await mtsNft.safeMint(deployer.address, 2, 1, 5, 8, 6, 1, 3, 762);
+      await mtsNft.safeMint(deployer.address, 6, 1, 5, 1, 3, 9, 3, 556);
         console.log(await mtsNft.ownedBy(deployer.address));
         const ownership1 = await mtsNft.ownedBy(deployer.address)
         const owning = await mtsNft.balanceOf(deployer.address)
@@ -78,7 +80,9 @@ describe("Token contract", function () {
     });
 
     it("Setup Box and Test Open", async function () {
-        await metaBox.setupBox(0, 40, 1, 10, 10, [1,2], [500, 500]);
+      console.log('Before setup');
+        await metaBox.setupBox(0, [30, 40, 1, 10, 10, 10, 1, 3, [1,2], [500, 500]]);
+        console.log('After setup');
         await metaBox.mint(user1.address, 0, 10, "0x");
         for (let i = 0; i < 10; i ++) {
             await metaBox.connect(user1).openBox(0);
