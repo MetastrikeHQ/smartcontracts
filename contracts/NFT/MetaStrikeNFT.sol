@@ -75,8 +75,6 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
-        mtsToken = mtsAddress_;
-        mttToken = mttAddress_;
     }
 
     function withdrawFee(address token, address to, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
