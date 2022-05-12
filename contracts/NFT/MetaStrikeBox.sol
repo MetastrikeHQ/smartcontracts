@@ -33,8 +33,12 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     address public metastrikeCore;
-    address public mtsERC20;
-    uint256 public totalOpenningFee;
+    address public mtsToken;
+    address public mttToken;
+    uint256 public mtsAmountFee;
+    uint256 public mttAmountFee;
+    uint256 public mtsTotalFee;
+    uint256 public mttTotalFee;
     uint256 public totalBoxSale;
     string public constant name = "Metastrike Box";
     string public constant ticker = "MTB";
@@ -42,7 +46,8 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     address public randomRegistry;
 
     struct BoxInfo {
-        uint256 openFee;
+        uint256 mtsFee;
+        uint256 mttFee;
         uint8 weaponCat;
         uint256 weapons;
         uint256 skins;
@@ -89,9 +94,8 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     event BoxBought(address buyer, uint8 sellId, uint8 boxId, uint256 amount);
 
-    constructor(address _metastrikeCore, address _mtsERC20, uint64 subscriptionId) ERC1155("https://resource.metastrike.io/box/{id}.json") VRFConsumerBaseV2(vrfCoordinator) {
+    constructor(address _metastrikeCore, uint64 subscriptionId) ERC1155("https://resource.metastrike.io/box/{id}.json") VRFConsumerBaseV2(vrfCoordinator) {
         metastrikeCore = _metastrikeCore;
-        mtsERC20 = _mtsERC20;
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
@@ -99,6 +103,11 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         LINKTOKEN = LinkTokenInterface(link);
         s_owner = msg.sender;
         s_subscriptionId = subscriptionId;
+    }
+
+    function setupFeeToken(address newMts, address newMtt) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        mtsToken = newMts;
+        mttToken = newMtt;
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
@@ -131,9 +140,8 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         openBox2Operating = newOpen2;
     }
 
-    function setupBox(uint8 _boxId, uint256 _openFee, uint8 _weaponCat, uint256 _weapons, uint256 _skins, uint8 _colors, uint8 _tier, uint256 _points, uint8[] calldata _slots, uint256[] calldata _weightedSlots) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        // require(boxesInfo[_boxId].weapons == 0, "Box already set up!");
-        boxesInfo[_boxId] = BoxInfo(_openFee, _weaponCat, _weapons, _skins, _colors, _tier, _points, _slots, _weightedSlots);
+    function setupBox(uint8 _boxId, BoxInfo memory _boxInfo) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        boxesInfo[_boxId] = _boxInfo;
     }
 
     function setupSell(uint8 _sellId, uint8 _boxId, address _paymentToken, uint256 _price, uint256 _totalAmount, uint256 _startDate, uint256 _endDate) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -181,13 +189,20 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
 
     function openBox(uint256 _id) whenOpenBoxOperating external returns (uint256) {
         require(msg.sender == tx.origin, "Nope lah!");
+        BoxInfo memory boxInfo = boxesInfo[_id];
         burn(msg.sender, _id, 1);
-        IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
+        if (mtsToken != address(0) && boxInfo.mtsFee > 0) {
+            IERC20(mtsToken).safeTransferFrom(msg.sender, address(this), boxInfo.mtsFee);
+            mtsTotalFee += boxInfo.mtsFee;
+        }
+        if (mttToken != address(0) && boxInfo.mttFee > 0) {
+            IERC20(mttToken).safeTransferFrom(msg.sender, address(this), boxInfo.mttFee);
+            mttTotalFee += boxInfo.mttFee;
+        }
         uint256 requestId = COORDINATOR.requestRandomWords(keyHash,s_subscriptionId,requestConfirmations,callbackGasLimit,numWords);
         s_requestIdToBoxOwer[requestId] = msg.sender;
         s_requestIdToBoxId[requestId] = _id ;
         s_requestId = requestId;
-        totalOpenningFee += boxesInfo[_id].openFee;
         return requestId;
     }
 
@@ -208,10 +223,16 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     function openBox2(uint256 _id) whenOpenBox2Operating external returns (uint256) {
         require(msg.sender == tx.origin, "Nope lah!");
         burn(msg.sender, _id, 1);
-        IERC20(mtsERC20).safeTransferFrom(msg.sender, address(this), boxesInfo[_id].openFee);
-        uint256 randomNumber = VerichainsNetRegistry(randomRegistry).randomService(MetaStrikeBox.randomKey).random();
-        totalOpenningFee += boxesInfo[_id].openFee;
         BoxInfo memory boxInfo = boxesInfo[_id];
+        if (mtsToken != address(0) && boxInfo.mtsFee > 0) {
+            IERC20(mtsToken).safeTransferFrom(msg.sender, address(this), boxInfo.mtsFee);
+            mtsTotalFee += boxInfo.mtsFee;
+        }
+        if (mttToken != address(0) && boxInfo.mttFee > 0) {
+            IERC20(mttToken).safeTransferFrom(msg.sender, address(this), boxInfo.mttFee);
+            mttTotalFee += boxInfo.mttFee;
+        }
+        uint256 randomNumber = VerichainsNetRegistry(randomRegistry).randomService(MetaStrikeBox.randomKey).random();
         uint8 weaponCat =  boxInfo.weaponCat;
         uint256 weaponType = randomNumber % boxInfo.weapons;
         uint256 weaponSkin = randomNumber % boxInfo.skins;
