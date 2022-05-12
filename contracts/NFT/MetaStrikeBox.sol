@@ -35,11 +35,9 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
     address public metastrikeCore;
     address public mtsToken;
     address public mttToken;
-    uint256 public mtsAmountFee;
-    uint256 public mttAmountFee;
     uint256 public mtsTotalFee;
     uint256 public mttTotalFee;
-    uint256 public totalBoxSale;
+    mapping(address => uint256) public totalBoxSale;
     string public constant name = "Metastrike Box";
     string public constant ticker = "MTB";
     uint256 constant randomKey = 0xc9821440a2c2cc97acac89148ac13927dead00238693487a9c84dfe89e28a284;
@@ -105,8 +103,11 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         s_subscriptionId = subscriptionId;
     }
 
-    function setupFeeToken(address newMts, address newMtt) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setupFeeMtsToken(address newMts) external onlyRole(DEFAULT_ADMIN_ROLE) {
         mtsToken = newMts;
+    }
+
+    function setupFeeMttToken(address newMtt) external onlyRole(DEFAULT_ADMIN_ROLE) {
         mttToken = newMtt;
     }
 
@@ -157,7 +158,7 @@ contract MetaStrikeBox is ERC1155, Pausable, AccessControl, ERC1155Burnable, VRF
         require(block.timestamp >= deal.startDate && block.timestamp <= deal.endDate, "Box is not available!");
         require(deal.purchased + _amount <= deal.totalAmount, "Box was out of stock");
         IERC20(deal.paymentToken).safeTransferFrom(msg.sender, address(this), deal.price * _amount);
-        totalBoxSale += deal.price * _amount;
+        totalBoxSale[deal.paymentToken] += deal.price * _amount;
         deal.purchased += _amount;
         _mint(msg.sender, deal.boxId, _amount, data);
         emit BoxBought(msg.sender, _sellId, deal.boxId, _amount);
