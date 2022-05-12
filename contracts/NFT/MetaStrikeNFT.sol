@@ -71,7 +71,7 @@ contract MetaStrikeCore is ERC721Enumerable, Pausable, AccessControl, ERC721Burn
     event MetalAttached(address user, uint256 tokenId, uint256[] metals, bool[] result, uint8 newSlot, uint8 newTier, uint256 newPoint);
     event RandomNumber(uint256 _value);
 
-    constructor(address mtsAddress_, address mttAddress_) ERC721("MetaStrikeCore", "MTS_NFT") {
+    constructor() ERC721("MetaStrikeCore", "MTS_NFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
